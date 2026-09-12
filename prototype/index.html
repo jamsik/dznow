@@ -1,0 +1,1305 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>html{color-scheme:light dark}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>DZNOW</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@600;700&family=Cormorant+Garamond:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+/* =========================================================
+   DZNOW — design system tokens
+   ========================================================= */
+:root{
+  --bg:#FAFAF8;
+  --surface:#FFFFFF;
+  --surface-2:#F1F1EE;
+  --surface-3:#E7E7E3;
+  --line:rgba(23,20,17,.09);
+  --line-strong:rgba(23,20,17,.16);
+  --text:#16130F;
+  --text-2:#4A453E;
+  --muted:#8A857C;
+  --accent:#C25E0B;
+  --accent-2:#E88A2E;
+  --accent-wash:rgba(194,94,11,.10);
+  --on-accent:#FFFFFF;
+  --ok:#1C6B4E;
+  --shadow-1:0 1px 2px rgba(20,16,12,.05);
+  --shadow-2:0 2px 6px rgba(20,16,12,.06),0 18px 40px rgba(20,16,12,.10);
+  --r-s:12px; --r-m:18px; --r-l:26px;
+  --nav-h:66px;
+  --ui:"Onest","Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E0D0C;
+    --surface:#191817;
+    --surface-2:#232120;
+    --surface-3:#2E2B29;
+    --line:rgba(255,255,255,.09);
+    --line-strong:rgba(255,255,255,.18);
+    --text:#F6F3EF;
+    --text-2:#C9C3BA;
+    --muted:#948E85;
+    --accent:#FFA653;
+    --accent-2:#FFC489;
+    --accent-wash:rgba(255,166,83,.14);
+    --on-accent:#20150A;
+    --ok:#6DCBA3;
+    --shadow-1:0 1px 2px rgba(0,0,0,.5);
+    --shadow-2:0 2px 6px rgba(0,0,0,.5),0 20px 44px rgba(0,0,0,.45);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E0D0C; --surface:#191817; --surface-2:#232120; --surface-3:#2E2B29;
+  --line:rgba(255,255,255,.09); --line-strong:rgba(255,255,255,.18);
+  --text:#F6F3EF; --text-2:#C9C3BA; --muted:#948E85;
+  --accent:#FFA653; --accent-2:#FFC489; --accent-wash:rgba(255,166,83,.14); --on-accent:#20150A;
+  --ok:#6DCBA3;
+  --shadow-1:0 1px 2px rgba(0,0,0,.5);
+  --shadow-2:0 2px 6px rgba(0,0,0,.5),0 20px 44px rgba(0,0,0,.45);
+}
+
+*{box-sizing:border-box}
+html,body{overflow-x:hidden}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:var(--ui);font-size:15px;line-height:1.45;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{border:none;background:none;padding:0;cursor:pointer;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+::-webkit-scrollbar{height:0;width:0}
+
+/* ---------- app shell ---------- */
+#app{min-height:100vh}
+.screen{max-width:520px;margin:0 auto;padding:0 18px calc(var(--nav-h) + 26px)}
+.screen.wide{max-width:520px}
+
+/* ---------- wordmark ---------- */
+.wordmark{
+  font-family:"Unbounded",var(--ui);font-weight:700;letter-spacing:-.055em;
+  font-size:21px;line-height:1;display:inline-flex;
+}
+.wordmark .hinge{color:var(--accent)}
+.wordmark.lg{font-size:30px}
+
+/* ---------- top bar ---------- */
+.appbar{
+  position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 88%,transparent);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  display:flex;align-items:center;gap:12px;padding:14px 0 10px;
+}
+.avatar{
+  width:34px;height:34px;border-radius:50%;flex:none;margin-left:auto;
+  background:var(--surface-2);display:grid;place-items:center;
+  font-size:12.5px;font-weight:700;letter-spacing:.02em;color:var(--text-2);
+}
+.avatar.on{background:var(--accent);color:var(--on-accent)}
+.iconbtn{
+  width:36px;height:36px;border-radius:50%;display:grid;place-items:center;flex:none;
+  color:var(--text-2);
+}
+.iconbtn:hover{background:var(--surface-2)}
+.iconbtn svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- headings ---------- */
+.h1{font-size:31px;line-height:1.08;font-weight:700;letter-spacing:-.035em;margin:14px 0 0;text-wrap:balance}
+.sub{color:var(--muted);font-size:15px;margin:7px 0 0}
+.h2{
+  font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+  margin:34px 0 12px;display:flex;align-items:center;gap:10px;
+}
+.h2 .more{margin-left:auto;text-transform:none;letter-spacing:0;font-size:13px;color:var(--accent);font-weight:600}
+
+/* ---------- category rail ---------- */
+.rail{display:flex;gap:8px;overflow-x:auto;margin:20px -18px 0;padding:0 18px 2px;scrollbar-width:none}
+.cat{
+  flex:none;border-radius:999px;padding:9px 16px;font-size:14px;font-weight:600;white-space:nowrap;
+  background:var(--surface-2);color:var(--text-2);
+}
+.cat[aria-pressed="true"]{background:var(--text);color:var(--bg)}
+.cat[disabled]{opacity:.45;cursor:not-allowed}
+.cat .soon{font-size:10px;font-weight:600;color:var(--muted);margin-left:5px;vertical-align:1px}
+
+/* ---------- preview boxes ---------- */
+.pv{
+  position:relative;aspect-ratio:9/16;overflow:hidden;border-radius:var(--r-m);
+  background:var(--surface-3);width:100%;
+}
+.pv .story{position:absolute;top:0;left:0;transform-origin:top left}
+.pv.flat{border-radius:var(--r-s)}
+
+/* ---------- scenario cards ---------- */
+.scenarios{display:grid;gap:12px}
+.sc-hero{
+  display:grid;grid-template-columns:118px minmax(0,1fr);gap:16px;align-items:center;
+  background:var(--surface);border-radius:var(--r-l);padding:14px;box-shadow:var(--shadow-1);
+  text-align:left;width:100%;
+}
+.sc-hero .pv{border-radius:14px}
+.sc-hero .t{font-size:19px;font-weight:700;letter-spacing:-.02em}
+.sc-hero .d{font-size:13.5px;color:var(--muted);margin-top:5px;line-height:1.4}
+.sc-hero .go{
+  display:inline-flex;align-items:center;gap:6px;margin-top:12px;
+  font-size:13.5px;font-weight:700;color:var(--accent);
+}
+.sc-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sc{
+  background:var(--surface);border-radius:var(--r-m);padding:12px;text-align:left;box-shadow:var(--shadow-1);
+  display:flex;flex-direction:column;gap:10px;width:100%;
+}
+.sc .pv{border-radius:12px;height:186px;width:auto;max-width:100%;margin:0 auto}
+.sc .t{font-size:15px;font-weight:700;letter-spacing:-.015em}
+.sc .d{font-size:12.5px;color:var(--muted);line-height:1.35;margin-top:3px}
+.sc.locked{opacity:.62}
+.sc.locked .pv{filter:grayscale(.65)}
+.badge-soon{
+  display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--muted);background:var(--surface-2);border-radius:6px;padding:2px 6px;margin-top:6px;
+}
+
+@media (max-width:899px){
+  /* третья карточка не должна стоять одна в ряду: разворачиваем её в строку */
+  .sc-pair > .sc:nth-child(3){grid-column:1 / -1;flex-direction:row;align-items:center;gap:14px}
+  .sc-pair > .sc:nth-child(3) .pv{height:118px;margin:0;flex:none}
+}
+
+/* ---------- template scroller ---------- */
+.tscroll{display:flex;gap:12px;overflow-x:auto;margin:0 -18px;padding:2px 18px 6px;scrollbar-width:none}
+.tcard{flex:none;width:158px;text-align:left;position:relative}
+.tcard .pv{border-radius:16px;box-shadow:var(--shadow-1)}
+.tcard .chips{display:flex;gap:5px;position:absolute;left:8px;top:8px;z-index:2}
+.tchip{
+  font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  background:rgba(12,10,8,.62);color:#fff;border-radius:6px;padding:3px 6px;backdrop-filter:blur(6px);
+}
+.tcard .t{font-size:14.5px;font-weight:700;margin-top:9px;letter-spacing:-.015em}
+.tcard .u{font-size:13px;font-weight:700;color:var(--accent);margin-top:3px}
+
+/* ---------- recent ---------- */
+.recent{
+  display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:13px;align-items:center;
+  background:var(--surface);border-radius:var(--r-m);padding:11px 14px 11px 11px;
+  box-shadow:var(--shadow-1);width:100%;text-align:left;
+}
+.recent + .recent{margin-top:10px}
+.recent .pv{border-radius:10px}
+.recent .t{font-size:15px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.recent .m{font-size:12.5px;color:var(--muted);margin-top:2px}
+.recent .m b{color:var(--text-2);font-weight:600;font-variant-numeric:tabular-nums}
+.recent .cta{font-size:13.5px;font-weight:700;color:var(--accent);white-space:nowrap;display:flex;align-items:center;gap:5px}
+
+/* ---------- bottom nav ---------- */
+.bottomnav{
+  position:fixed;left:0;right:0;bottom:0;z-index:40;
+  background:color-mix(in srgb,var(--bg) 92%,transparent);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.bottomnav .in{max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);height:var(--nav-h)}
+.nav-i{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--muted);font-size:11px;font-weight:600}
+.nav-i svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nav-i[aria-current="page"]{color:var(--text)}
+.nav-i[aria-current="page"] svg{stroke-width:2.1}
+
+/* ---------- editor ---------- */
+.edbar{
+  position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:8px;
+  padding:12px 0 10px;background:color-mix(in srgb,var(--bg) 88%,transparent);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+}
+.edbar .title{font-size:15.5px;font-weight:700;letter-spacing:-.015em}
+.edbar .back{display:flex;align-items:center;gap:4px;font-size:14px;font-weight:600;color:var(--text-2);padding:4px 6px 4px 0}
+.edbar .back svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+
+.stagewrap{display:flex;flex-direction:column;align-items:center;gap:12px}
+.pv-main{height:min(46vh,430px);width:auto;aspect-ratio:9/16;box-shadow:var(--shadow-2)}
+.playbtn{
+  display:inline-flex;align-items:center;gap:8px;background:var(--surface);border-radius:999px;
+  padding:9px 17px;font-size:13.5px;font-weight:600;box-shadow:var(--shadow-1);color:var(--text-2);
+}
+.playbtn svg{width:13px;height:13px;fill:currentColor}
+.playbtn[data-busy="1"]{color:var(--accent)}
+
+.section{margin-top:26px}
+.section > h3{
+  font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;
+}
+.fieldset{background:var(--surface);border-radius:var(--r-m);overflow:hidden;box-shadow:var(--shadow-1)}
+.row{display:flex;align-items:center;gap:12px;padding:11px 15px;min-height:52px}
+.row + .row{border-top:1px solid var(--line)}
+.row label{font-size:14px;color:var(--muted);flex:0 0 auto;min-width:92px;max-width:48%}
+.row input,.row select{
+  flex:1;min-width:0;background:none;border:none;text-align:right;font-size:15px;font-weight:600;padding:4px 0;
+}
+.row input:focus,.row select:focus{outline:none;color:var(--accent)}
+.row select{appearance:none;-webkit-appearance:none;text-align-last:right}
+.row .unit{font-size:13px;color:var(--muted);flex:none;font-family:var(--mono)}
+.row.result{background:var(--accent-wash);min-height:60px}
+.row.result label{color:var(--text-2);font-weight:600;width:auto;flex:1}
+.row.result .v{font-family:var(--mono);font-size:20px;font-weight:500;color:var(--accent);font-variant-numeric:tabular-nums}
+.hint{font-size:12.5px;color:var(--muted);margin:8px 4px 0;line-height:1.45}
+
+/* uploader */
+.upl{
+  background:var(--surface);border-radius:var(--r-m);box-shadow:var(--shadow-1);padding:13px;
+  display:flex;align-items:center;gap:13px;
+}
+.upl .thumb{
+  width:56px;height:56px;border-radius:12px;flex:none;background:var(--surface-2);
+  display:grid;place-items:center;overflow:hidden;color:var(--muted);
+}
+.upl .thumb img{width:100%;height:100%;object-fit:cover}
+.upl .thumb svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.upl .t{font-size:14.5px;font-weight:600}
+.upl .d{font-size:12.5px;color:var(--muted);margin-top:2px}
+.upl .act{margin-left:auto;font-size:13.5px;font-weight:700;color:var(--accent);white-space:nowrap}
+input[type=file]{display:none}
+
+/* brand */
+.brandcard{
+  background:var(--surface);border-radius:var(--r-m);box-shadow:var(--shadow-1);padding:13px;
+  display:flex;align-items:center;gap:13px;
+}
+.brandcard .mark{
+  width:44px;height:44px;border-radius:13px;flex:none;display:grid;place-items:center;
+  font-family:var(--mono);font-size:16px;font-weight:500;color:#fff;
+}
+.brandcard .t{font-size:15px;font-weight:700}
+.brandcard .d{font-size:12.5px;color:var(--muted);margin-top:1px}
+.variants{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:10px}
+.variant{
+  background:var(--surface);border-radius:14px;padding:9px;box-shadow:var(--shadow-1);
+  display:flex;flex-direction:column;gap:7px;align-items:center;font-size:12.5px;font-weight:600;color:var(--text-2);
+  border:1.5px solid transparent;
+}
+.variant .sw{width:100%;height:34px;border-radius:9px}
+.variant[aria-pressed="true"]{border-color:var(--accent);color:var(--text)}
+
+/* bottom action */
+.cta-space{height:88px}
+.ctabar{
+  position:fixed;left:0;right:0;bottom:0;z-index:40;padding:12px 18px calc(12px + env(safe-area-inset-bottom));
+  background:color-mix(in srgb,var(--bg) 92%,transparent);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--line);
+}
+.ctabar .in{max-width:520px;margin:0 auto;display:flex;align-items:center;gap:14px}
+.btn{
+  border-radius:14px;padding:15px 22px;font-size:15.5px;font-weight:700;letter-spacing:-.01em;
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;transition:transform .12s,filter .15s;
+}
+.btn:active{transform:scale(.985)}
+.btn.primary{background:var(--accent);color:var(--on-accent);flex:1;box-shadow:0 8px 22px color-mix(in srgb,var(--accent) 28%,transparent)}
+.btn.primary:hover{filter:brightness(1.05)}
+.btn.ghost{background:var(--surface-2);color:var(--text)}
+.btn.line{background:none;box-shadow:inset 0 0 0 1.5px var(--line-strong);color:var(--text)}
+.btn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ctabar .fmt{font-size:12px;color:var(--muted);font-family:var(--mono);white-space:nowrap;line-height:1.35;text-align:right}
+
+/* ---------- render screen ---------- */
+.renderwrap{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:32px 20px}
+.renderwrap .pv{width:min(58vw,210px);box-shadow:var(--shadow-2)}
+.shimmer{position:absolute;inset:0;z-index:3;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.22) 50%,transparent 70%);background-size:260% 100%;animation:sweep 1.5s linear infinite}
+@keyframes sweep{from{background-position:180% 0}to{background-position:-80% 0}}
+.rsteps{width:100%;max-width:320px;display:grid;gap:2px}
+.rstep{display:flex;align-items:center;gap:11px;padding:9px 2px;font-size:14.5px;color:var(--muted);transition:color .25s}
+.rstep .dot{width:18px;height:18px;border-radius:50%;flex:none;display:grid;place-items:center;background:var(--surface-2)}
+.rstep .dot svg{width:11px;height:11px;fill:none;stroke:var(--on-accent);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;opacity:0}
+.rstep.active{color:var(--text);font-weight:600}
+.rstep.active .dot{background:var(--accent-wash)}
+.rstep.done{color:var(--text-2)}
+.rstep.done .dot{background:var(--accent)}
+.rstep.done .dot svg{opacity:1}
+.rbar{width:100%;max-width:320px;height:3px;border-radius:2px;background:var(--surface-2);overflow:hidden}
+.rbar i{display:block;height:100%;background:var(--accent);width:0;transition:width .4s ease}
+
+/* ---------- result ---------- */
+.result-top{text-align:center;margin-top:6px}
+.result-top .ok{
+  width:44px;height:44px;border-radius:50%;background:var(--accent);color:var(--on-accent);
+  display:grid;place-items:center;margin:0 auto 12px;
+}
+.result-top .ok svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.result-top h1{font-size:27px;font-weight:700;letter-spacing:-.03em;margin:0}
+.result-top p{color:var(--muted);font-size:14px;margin:6px 0 0;font-family:var(--mono)}
+.fmtpick{display:flex;gap:8px;justify-content:center;margin:18px 0 4px}
+.fmt-o{
+  background:var(--surface-2);border-radius:999px;padding:8px 15px;font-size:13px;font-weight:600;color:var(--text-2);
+}
+.fmt-o[aria-pressed="true"]{background:var(--text);color:var(--bg)}
+.result-actions{display:grid;gap:10px;margin-top:22px}
+.result-actions .pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.textlink{font-size:14px;font-weight:600;color:var(--text-2);padding:12px;text-align:center}
+
+/* ---------- projects ---------- */
+.plist{display:grid;gap:11px;margin-top:6px}
+.pitem{
+  display:grid;grid-template-columns:58px minmax(0,1fr);gap:13px;
+  background:var(--surface);border-radius:var(--r-m);padding:11px;box-shadow:var(--shadow-1);align-items:center;
+}
+.pitem .t{font-size:15.5px;font-weight:700;letter-spacing:-.015em}
+.pitem .m{font-size:12.5px;color:var(--muted);margin-top:2px}
+.pitem .acts{display:flex;gap:8px;margin-top:9px}
+.pitem .acts button{font-size:13px;font-weight:700;padding:6px 12px;border-radius:9px;background:var(--surface-2)}
+.pitem .acts .rep{background:var(--accent-wash);color:var(--accent)}
+.empty{text-align:center;color:var(--muted);padding:60px 20px;font-size:14.5px}
+
+/* ---------- profile ---------- */
+.prof{display:flex;align-items:center;gap:14px;margin-top:10px}
+.prof .av{width:58px;height:58px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;font-size:20px;font-weight:700}
+.prof .n{font-size:19px;font-weight:700;letter-spacing:-.02em}
+.prof .r{font-size:13.5px;color:var(--muted);margin-top:2px}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-top:20px}
+.stat{background:var(--surface);border-radius:var(--r-m);padding:14px;box-shadow:var(--shadow-1)}
+.stat .v{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.stat .k{font-size:11.5px;color:var(--muted);margin-top:2px}
+.rows{background:var(--surface);border-radius:var(--r-m);box-shadow:var(--shadow-1);margin-top:20px;overflow:hidden}
+.rows .r{display:flex;align-items:center;gap:12px;padding:14px 15px;font-size:14.5px;font-weight:600;width:100%;text-align:left}
+.rows .r + .r{border-top:1px solid var(--line)}
+.rows .r .v{margin-left:auto;color:var(--muted);font-weight:500;font-size:13.5px}
+
+/* ---------- sheet / modal ---------- */
+.scrim{position:fixed;inset:0;z-index:60;background:rgba(10,8,6,.5);display:flex;align-items:flex-end;justify-content:center;padding:0}
+.sheet{
+  background:var(--surface);width:100%;max-width:520px;border-radius:22px 22px 0 0;padding:10px 16px calc(20px + env(safe-area-inset-bottom));
+  animation:up .22s cubic-bezier(.2,.9,.3,1) both;
+}
+@keyframes up{from{transform:translateY(18px);opacity:.4}to{transform:none;opacity:1}}
+.sheet .grab{width:38px;height:4px;border-radius:2px;background:var(--surface-3);margin:0 auto 12px}
+.sheet .si{width:100%;text-align:left;padding:14px 6px;font-size:15px;font-weight:600;border-radius:10px}
+.sheet .si + .si{border-top:1px solid var(--line)}
+.sheet .si.danger{color:#C4453F}
+.sheet img{width:100%;border-radius:14px;margin:6px 0 12px}
+.sheet p{margin:0 0 12px;font-size:13.5px;color:var(--muted)}
+
+/* ---------- desktop ---------- */
+@media (min-width:900px){
+  .screen{max-width:1040px;padding:0 28px 60px}
+  .bottomnav{display:none}
+  .appbar{padding:18px 0 12px;gap:22px}
+  .appbar .desknav{display:flex;gap:4px;margin-left:26px}
+  .appbar .desknav button{padding:8px 14px;border-radius:10px;font-size:14px;font-weight:600;color:var(--muted)}
+  .appbar .desknav button[aria-current="page"]{background:var(--surface-2);color:var(--text)}
+  .h1{font-size:38px}
+  .scenarios{grid-template-columns:repeat(4,1fr);gap:14px;align-items:start}
+  .sc-hero{grid-column:span 1;grid-template-columns:1fr;align-items:start;padding:12px;gap:12px}
+  .sc-hero .t{font-size:17px}
+  .sc-hero .pv,.sc .pv{height:230px;width:auto;max-width:100%;margin:0 auto}
+  .sc-pair{grid-column:span 3;grid-template-columns:repeat(3,1fr)}
+  .editor-grid{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:34px;align-items:start}
+  .editor-grid .left{position:sticky;top:78px}
+  .pv-main{height:min(62vh,560px)}
+  .ctabar{position:static;background:none;border:none;backdrop-filter:none;padding:22px 0 0}
+  .ctabar .in{max-width:none}
+  .cta-space{display:none}
+  .renderwrap .pv{width:230px}
+  .result-actions{max-width:420px;margin-left:auto;margin-right:auto}
+  .plist{grid-template-columns:1fr 1fr}
+}
+@media (min-width:900px){ .mob-only{display:none} }
+@media (max-width:899px){ .desknav{display:none} }
+
+/* =========================================================
+   STORY TEMPLATE — 1080×1920 canvas (shared by preview,
+   thumbnails, render screen and export)
+   ========================================================= */
+.story{
+  width:1080px;height:1920px;position:absolute;top:0;left:0;transform-origin:top left;
+  --bg:#12161B; --panel:#1B222A; --fg:#FFFFFF; --dim:#9AA7B4;
+  --brand:#D8A25A; --brand-ink:#12161B; --line-c:rgba(255,255,255,.14);
+  --display:"Unbounded"; --plan-stroke:#D8A25A; --plan-fill:rgba(216,162,90,.08);
+  background:var(--bg);color:var(--fg);
+  font-family:"Onest","Manrope",sans-serif;
+  padding:96px 76px 84px;display:flex;flex-direction:column;overflow:hidden;
+}
+.story.skin-light{
+  --bg:#F4F1EC; --panel:#FFFFFF; --fg:#1A1714; --dim:#7A736A;
+  --brand:#1F4B3F; --brand-ink:#FFFFFF; --line-c:rgba(26,23,20,.12);
+  --display:"Cormorant Garamond"; --plan-stroke:#1F4B3F; --plan-fill:rgba(31,75,63,.07);
+}
+.story.skin-accent{
+  --bg:#123A31; --panel:#17453A; --fg:#F3F7F4; --dim:#9FC0B4;
+  --brand:#EFC488; --brand-ink:#123A31; --line-c:rgba(239,196,136,.22);
+  --display:"Unbounded"; --plan-stroke:#EFC488; --plan-fill:rgba(239,196,136,.08);
+}
+.story::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(90% 55% at 78% 6%, color-mix(in srgb,var(--brand) 16%, transparent), transparent 62%);
+}
+.story > *{position:relative;z-index:1}
+
+.s-top{display:flex;align-items:center;gap:20px;margin-bottom:52px}
+.s-logo{
+  width:76px;height:76px;border-radius:20px;background:var(--brand);color:var(--brand-ink);
+  display:grid;place-items:center;font-family:"IBM Plex Mono",monospace;font-size:32px;font-weight:500;flex:none;
+}
+.s-agency{font-size:30px;font-weight:700;letter-spacing:-.01em}
+.s-city{font-size:23px;color:var(--dim);margin-top:4px}
+.s-tag{
+  margin-left:auto;border:2px solid var(--brand);color:var(--brand);border-radius:999px;
+  padding:12px 26px;font-size:23px;font-weight:600;white-space:nowrap;
+}
+
+.s-plan{
+  background:var(--panel);border:1px solid var(--line-c);border-radius:36px;
+  padding:34px;display:grid;place-items:center;height:640px;overflow:hidden;margin-bottom:44px;
+}
+.s-plan svg{width:100%;height:100%}
+.s-plan img{max-width:100%;max-height:100%;object-fit:contain;border-radius:18px}
+.plan-wall{fill:none;stroke:var(--plan-stroke);stroke-width:7;stroke-linecap:square;stroke-linejoin:miter}
+.plan-inner{fill:none;stroke:var(--plan-stroke);stroke-width:4;opacity:.85}
+.plan-room{fill:var(--plan-fill)}
+.plan-label{fill:var(--fg);font-family:"Onest","Manrope",sans-serif;font-size:20px;font-weight:600}
+.plan-area{fill:var(--dim);font-family:"IBM Plex Mono",monospace;font-size:17px}
+.plan-dot{fill:var(--brand)}
+
+.s-title{font-family:var(--display),"Onest",serif;font-size:62px;line-height:1.06;font-weight:700;letter-spacing:-.02em}
+.s-sub{font-size:26px;color:var(--dim);margin-top:14px}
+
+.s-price{display:flex;align-items:baseline;gap:18px;margin-top:34px;font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+.s-price .v{font-size:78px;font-weight:500;letter-spacing:-.03em;line-height:1}
+.s-price .c{font-size:26px;color:var(--dim);font-family:"Onest","Manrope",sans-serif;font-weight:600}
+
+.s-facts{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:38px}
+.fact{background:var(--panel);border:1px solid var(--line-c);border-radius:24px;padding:24px 26px;display:flex;align-items:center;gap:18px}
+.fact .ic{width:46px;height:46px;flex:none;stroke:var(--brand);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.fact .k{font-size:19px;color:var(--dim);letter-spacing:.02em}
+.fact .v{font-size:31px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
+
+.s-mortgage{
+  margin-top:auto;background:var(--brand);color:var(--brand-ink);border-radius:28px;
+  padding:32px 34px;display:flex;align-items:center;gap:26px;
+}
+.s-mortgage .lab{font-size:22px;font-weight:600;opacity:.8}
+.s-mortgage .amt{font-family:"IBM Plex Mono",monospace;font-size:56px;font-weight:500;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.05}
+.s-mortgage .terms{margin-left:auto;text-align:right;font-size:20px;line-height:1.5;font-weight:600;opacity:.85}
+
+.s-foot{display:flex;align-items:center;gap:20px;margin-top:34px;font-size:24px}
+.s-foot .who{font-weight:700}
+.s-foot .tel{margin-left:auto;font-family:"IBM Plex Mono",monospace;color:var(--dim)}
+
+/* layout B — крупная цифра */
+.story.lay-figure{padding:110px 76px 84px}
+.story.lay-figure .s-plan{
+  position:absolute;inset:auto -210px -300px auto;width:1180px;height:900px;
+  background:none;border:none;opacity:.11;z-index:0;padding:0;
+  -webkit-mask-image:linear-gradient(to bottom,#000 40%,transparent 92%);
+  mask-image:linear-gradient(to bottom,#000 40%,transparent 92%);
+}
+.story.lay-figure .s-hero{margin:60px 0 0}
+.story.lay-figure .s-kicker{font-size:28px;color:var(--dim);letter-spacing:.06em;text-transform:uppercase}
+.story.lay-figure .s-big{
+  font-family:"IBM Plex Mono",monospace;font-size:150px;line-height:1;font-weight:500;letter-spacing:-.05em;
+  margin-top:18px;font-variant-numeric:tabular-nums;
+}
+.story.lay-figure .s-big small{font-size:52px;color:var(--dim);letter-spacing:0}
+.story.lay-figure .s-title{font-size:50px;margin-top:44px}
+.story.lay-figure .s-list{margin-top:52px;display:grid;border-top:1px solid var(--line-c)}
+.story.lay-figure .row{display:flex;align-items:baseline;gap:20px;padding:26px 4px;border-bottom:1px solid var(--line-c);font-size:28px;min-height:0}
+.story.lay-figure .row .k{color:var(--dim)}
+.story.lay-figure .row .v{margin-left:auto;font-weight:700;font-variant-numeric:tabular-nums}
+
+/* animation */
+@keyframes s-rise{from{opacity:0;transform:translateY(38px)}to{opacity:1;transform:none}}
+@keyframes s-pop{from{opacity:0;transform:scale(.86)}to{opacity:1;transform:none}}
+@keyframes s-draw{from{stroke-dashoffset:var(--len)}to{stroke-dashoffset:0}}
+@keyframes s-fade{from{opacity:0}to{opacity:1}}
+.story.playing .anim{animation:s-rise .78s cubic-bezier(.16,.9,.24,1) both;animation-delay:var(--d,0s)}
+.story.playing .anim-pop{animation:s-pop .55s cubic-bezier(.2,1.3,.5,1) both;animation-delay:var(--d,0s)}
+.story.playing .plan-wall,.story.playing .plan-inner{animation:s-draw 1.15s ease-out both;animation-delay:var(--d,.15s)}
+.story.playing .plan-room,.story.playing .plan-label,.story.playing .plan-area,.story.playing .plan-dot{animation:s-fade .5s ease both;animation-delay:var(--d,1s)}
+/* System "reduce motion" must not silently kill a playback the user asked for:
+   only automatic playback (.playing without .force) is suppressed. */
+@media (prefers-reduced-motion:reduce){
+  .story.playing:not(.force) .anim,
+  .story.playing:not(.force) .anim-pop,
+  .story.playing:not(.force) .plan-wall,
+  .story.playing:not(.force) .plan-inner,
+  .story.playing:not(.force) .plan-room,
+  .story.playing:not(.force) .plan-label,
+  .story.playing:not(.force) .plan-area,
+  .story.playing:not(.force) .plan-dot{animation:none}
+}
+
+</style>
+
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* =========================================================
+   DZNOW — Telegram Mini App prototype
+   Структура (соответствует будущему дереву компонентов):
+     pages:      HomePage · EditorPage · RenderPage · ResultPage · ProjectsPage · ProfilePage
+     components: AppHeader · BottomNavigation · CategorySelector · ScenarioCard ·
+                 TemplateCard · StoryPreview · FormSection · AssetUploader ·
+                 BrandSelector · PrimaryAction
+   ========================================================= */
+(function(){
+"use strict";
+
+/* ---------------------------------------------------------
+   1. Данные
+   --------------------------------------------------------- */
+const AGENCY = { name:"Дом и Ключ", mark:"ДК", color:"#1F4B3F" };
+const USER   = { name:"Анна Ковалёва", initials:"АК", role:"Риэлтор · " + AGENCY.name, tel:"+7 999 214-08-55" };
+
+const CATEGORIES = [
+  { id:"realty",   title:"Недвижимость", ready:true  },
+  { id:"auto",     title:"Авто",         ready:false },
+  { id:"services", title:"Услуги",       ready:false },
+  { id:"goods",    title:"Товары",       ready:false }
+];
+
+const SCENARIOS = [
+  { id:"object",   layout:"card",   title:"Объект",             desc:"Показать квартиру и основные характеристики", ready:true  },
+  { id:"figure",   layout:"figure", title:"Крупная цифра",      desc:"Цена, скидка, платёж или первый взнос",        ready:true  },
+  { id:"mortgage", layout:"figure", title:"Рассрочка / ипотека",desc:"Красиво показать условия покупки",            ready:false },
+  { id:"digest",   layout:"card",   title:"Подборка",           desc:"Несколько объектов в одном материале",        ready:false }
+];
+
+const TEMPLATES = [
+  { id:"object", title:"Карточка объекта", kind:"Story", motion:true,  layout:"card",   skin:"dark"   },
+  { id:"figure", title:"Крупная цифра",    kind:"Reel",  motion:true,  layout:"figure", skin:"accent" },
+  { id:"light",  title:"Светлая карточка", kind:"Story", motion:false, layout:"card",   skin:"light"  }
+];
+
+const BASE = {
+  complex:"ЖК «Панорама»", rooms:"2-комнатная", area:62.4, floor:"9 из 17",
+  district:"Академгородок", finish:"White box", ready:"IV кв. 2027",
+  price:9450000, down:20, rate:5.9, term:25,
+  tag:"Семейная ипотека 5,9%", skin:"dark", planImage:null
+};
+
+const now = Date.now();
+const state = {
+  route:"home",
+  category:"realty",
+  scenario:"object",
+  layout:"card",
+  draft:{ ...BASE },
+  format:"png",
+  projects:[
+    { id:"p1", title:"ЖК «Панорама»", scenario:"object", layout:"card",
+      at:now - 5*60*1000, data:{ ...BASE } },
+    { id:"p2", title:"ЖК «Никольский парк»", scenario:"figure", layout:"figure",
+      at:now - 20*60*60*1000,
+      data:{ ...BASE, complex:"ЖК «Никольский парк»", rooms:"1-комнатная", area:38.6,
+             price:5980000, down:15, rate:6.4, term:30, floor:"4 из 9",
+             district:"Первомайский", ready:"II кв. 2027", tag:"Взнос от 15%", skin:"accent" } }
+  ]
+};
+
+/* ---------------------------------------------------------
+   2. Утилиты
+   --------------------------------------------------------- */
+const $  = (s,r) => (r||document).querySelector(s);
+const $$ = (s,r) => Array.from((r||document).querySelectorAll(s));
+const nf = new Intl.NumberFormat("ru-RU");
+const esc = s => String(s==null?"":s).replace(/[<>&"]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;"}[c]));
+const num = v => new Intl.NumberFormat("ru-RU",{maximumFractionDigits:1}).format(isFinite(v)?v:0);
+const money = v => nf.format(Math.round(v||0)) + " ₽";
+const short = v => v>=1e6 ? (v/1e6).toFixed(v%1e6===0?0:2).replace(".",",")+" млн ₽" : money(v);
+
+function annuity(d){
+  const loan = d.price*(1-d.down/100), i = d.rate/100/12, n = d.term*12;
+  if(loan<=0||n<=0) return 0;
+  return i<=0 ? loan/n : loan*i/(1-Math.pow(1+i,-n));
+}
+function relTime(ts){
+  const m = Math.round((Date.now()-ts)/60000);
+  if(m < 1) return "изменено только что";
+  if(m < 60) return "изменено " + m + " " + plural(m,["минуту","минуты","минут"]) + " назад";
+  const h = Math.round(m/60);
+  if(h < 10) return "изменено " + h + " " + plural(h,["час","часа","часов"]) + " назад";
+  return whenLabel(ts);
+}
+function whenLabel(ts){
+  const d = new Date(ts), t = new Date();
+  const hm = String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+  const same = d.toDateString() === t.toDateString();
+  const yest = new Date(t.getTime()-864e5).toDateString() === d.toDateString();
+  if(same) return "Сегодня, " + hm;
+  if(yest) return "Вчера, " + hm;
+  return d.toLocaleDateString("ru-RU",{day:"numeric",month:"long"}) + ", " + hm;
+}
+function plural(n,f){ const a=Math.abs(n)%100,b=a%10; return a>10&&a<20?f[2]:b>1&&b<5?f[1]:b===1?f[0]:f[2]; }
+
+const I = {
+  home:'<path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/>',
+  grid:'<rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/>',
+  user:'<circle cx="12" cy="8" r="3.6"/><path d="M4.8 20c.9-3.6 3.7-5.4 7.2-5.4s6.3 1.8 7.2 5.4"/>',
+  back:'<path d="M15 5l-7 7 7 7"/>',
+  dots:'<circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/>',
+  down:'<path d="M12 4v11m0 0 4.5-4.5M12 15l-4.5-4.5M5 17v2a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2"/>',
+  share:'<path d="M12 15V4m0 0 4 4m-4-4L8 8"/><path d="M5 14v5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-5"/>',
+  image:'<rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="8.6" cy="9.6" r="1.6"/><path d="M4 16.5 9 12l4 3.4 3-2.4 4 3.5"/>',
+  check:'<path d="M5 12.5 10 17.5 19 7"/>',
+  chev:'<path d="M9 5l7 7-7 7"/>',
+  refresh:'<path d="M20 11a8 8 0 1 0-.6 4"/><path d="M20 5v6h-6"/>'
+};
+const svg = (p,cls) => '<svg viewBox="0 0 24 24"' + (cls?' class="'+cls+'"':'') + '>' + p + '</svg>';
+
+/* ---------------------------------------------------------
+   3. StoryPreview — разметка макета 1080×1920
+   --------------------------------------------------------- */
+const PLAN_ICONS = {
+  area:'<path d="M4 20V8l8-4 8 4v12"/><path d="M4 20h16"/><path d="M9 20v-6h6v6"/>',
+  floor:'<rect x="5" y="3" width="14" height="18" rx="1.5"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2"/>',
+  ready:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  finish:'<circle cx="8" cy="12" r="4"/><path d="M12 12h9M18 12v4M15 12v3"/>'
+};
+const factIcon = n => '<svg class="ic anim-pop" viewBox="0 0 24 24" style="--d:var(--dd)">'+PLAN_ICONS[n]+'</svg>';
+
+function planMarkup(d){
+  if(d.planImage) return '<img src="'+d.planImage+'" alt="Планировка">';
+  return `<svg viewBox="0 0 560 400" preserveAspectRatio="xMidYMid meet">
+  <g class="plan-room" style="--d:1.05s">
+    <rect x="20" y="20" width="300" height="200"/><rect x="320" y="20" width="220" height="200"/>
+    <rect x="20" y="220" width="200" height="160"/><rect x="220" y="220" width="140" height="160"/>
+    <rect x="360" y="220" width="180" height="160"/>
+  </g>
+  <path class="plan-wall" d="M20 20 H540 V380 H20 Z"/>
+  <path class="plan-inner" d="M320 20 V220"/><path class="plan-inner" d="M20 220 H540"/>
+  <path class="plan-inner" d="M220 220 V380"/><path class="plan-inner" d="M360 220 V380"/>
+  <path class="plan-inner" d="M420 380 H540" style="stroke-dasharray:6 10"/>
+  <g class="plan-label" style="--d:1.15s">
+    <text x="42" y="112">Гостиная</text><text x="342" y="112">Спальня</text>
+    <text x="42" y="300">Кухня</text><text x="240" y="300">С/у</text><text x="382" y="300">Прихожая</text>
+  </g>
+  <g class="plan-area" style="--d:1.25s">
+    <text x="42" y="140">24,5 м²</text><text x="342" y="140">14,2 м²</text>
+    <text x="42" y="328">10,8 м²</text><text x="240" y="328">4,1 м²</text><text x="382" y="328">6,4 м²</text>
+  </g>
+  <g class="plan-dot" style="--d:1.35s"><circle cx="470" cy="380" r="7"/></g>
+</svg>`;
+}
+
+function storyHTML(d, layout){
+  const pay = annuity(d);
+  const head = `<div class="s-top anim" style="--d:.05s">
+      <div class="s-logo">${esc(AGENCY.mark)}</div>
+      <div><div class="s-agency">${esc(AGENCY.name)}</div><div class="s-city">${esc(d.district)}</div></div>
+      ${d.tag ? '<div class="s-tag">'+esc(d.tag)+'</div>' : ''}
+    </div>`;
+  const foot = `<div class="s-foot anim" style="--d:1.5s">
+      <span class="who">${esc(USER.name)}</span><span class="tel">${esc(USER.tel)}</span></div>`;
+  const mortgage = `<div class="s-mortgage anim" style="--d:1.3s">
+      <div><div class="lab">В ипотеку от</div>
+        <div class="amt" data-count="${Math.round(pay)}">${money(pay)}</div></div>
+      <div class="terms">взнос ${num(d.down)}% · ${num(d.rate)}%<br>на ${num(d.term)} лет</div>
+    </div>`;
+
+  if(layout === "figure"){
+    return `<div class="s-plan">${planMarkup(d)}</div>` + head + `
+      <div class="s-hero">
+        <div class="s-kicker anim" style="--d:.35s">Платёж в месяц</div>
+        <div class="s-big anim" style="--d:.45s"><span data-count="${Math.round(pay)}" data-fmt="plain">${nf.format(Math.round(pay))}</span> <small>₽</small></div>
+        <div class="s-title anim" style="--d:.6s">${esc(d.rooms)} ${num(d.area)} м²<br>${esc(d.complex)}</div>
+      </div>
+      <div class="s-list">
+        <div class="row anim" style="--d:.8s"><span class="k">Стоимость</span><span class="v">${short(d.price)}</span></div>
+        <div class="row anim" style="--d:.88s"><span class="k">Первый взнос</span><span class="v">${short(d.price*d.down/100)}</span></div>
+        <div class="row anim" style="--d:.96s"><span class="k">Ставка / срок</span><span class="v">${num(d.rate)}% · ${num(d.term)} лет</span></div>
+        <div class="row anim" style="--d:1.04s"><span class="k">Этаж / сдача</span><span class="v">${esc(d.floor)} · ${esc(d.ready)}</span></div>
+      </div>` + mortgage + foot;
+  }
+  return head + `
+    <div class="s-plan anim" style="--d:.2s">${planMarkup(d)}</div>
+    <div class="s-title anim" style="--d:.55s">${esc(d.rooms)}<br>${esc(d.complex)}</div>
+    <div class="s-sub anim" style="--d:.65s">${esc(d.finish)} · сдача ${esc(d.ready)}</div>
+    <div class="s-price anim" style="--d:.8s">
+      <span class="v" data-count="${d.price}" data-fmt="short">${short(d.price)}</span>
+      <span class="c">${num(d.price/d.area)} ₽ / м²</span>
+    </div>
+    <div class="s-facts">
+      <div class="fact anim" style="--d:.95s;--dd:1.05s">${factIcon("area")}<div><div class="k">Площадь</div><div class="v" data-count="${d.area}" data-fmt="area">${num(d.area)} м²</div></div></div>
+      <div class="fact anim" style="--d:1.02s;--dd:1.12s">${factIcon("floor")}<div><div class="k">Этаж</div><div class="v">${esc(d.floor)}</div></div></div>
+      <div class="fact anim" style="--d:1.09s;--dd:1.19s">${factIcon("ready")}<div><div class="k">Ключи</div><div class="v">${esc(d.ready)}</div></div></div>
+      <div class="fact anim" style="--d:1.16s;--dd:1.26s">${factIcon("finish")}<div><div class="k">Отделка</div><div class="v">${esc(d.finish)}</div></div></div>
+    </div>` + mortgage + foot;
+}
+
+function paintStory(node, d, layout){
+  node.className = "story lay-" + layout + " skin-" + (d.skin || "dark");
+  node.innerHTML = storyHTML(d, layout);
+  $$(".plan-wall,.plan-inner", node).forEach((p,i) => {
+    let len = 1200; try{ len = p.getTotalLength() || 1200; }catch(e){}
+    p.style.setProperty("--len", len);
+    p.style.strokeDasharray = len;
+    p.style.setProperty("--d", (0.25 + i*0.12) + "s");
+  });
+}
+
+/* превью-бокс: <div class="pv"><div class="story"></div></div> */
+function preview(d, layout, cls){
+  return '<div class="pv '+(cls||'')+'" data-pv><div class="story" data-story '+
+         'data-d=\''+esc(JSON.stringify(d))+'\' data-layout="'+layout+'"></div></div>';
+}
+function hydratePreviews(root){
+  $$("[data-story]", root||document).forEach(node => {
+    if(node.dataset.painted) return;
+    paintStory(node, JSON.parse(node.dataset.d), node.dataset.layout);
+    node.dataset.painted = "1";
+  });
+  fitAll(root);
+}
+function fitAll(root){
+  $$("[data-pv]", root||document).forEach(box => {
+    const s = box.clientWidth / 1080;
+    const st = $(".story", box);
+    if(st) st.style.transform = "scale(" + s + ")";
+  });
+}
+
+/* проигрывание анимации */
+const timers = new WeakMap();
+function playStory(node){
+  if(!node) return;
+  node.classList.remove("playing","force");
+  void node.offsetWidth;
+  node.classList.add("playing","force");
+  countUp(node);
+  clearTimeout(timers.get(node));
+  timers.set(node, setTimeout(() => node.classList.remove("playing","force"), 2700));
+}
+function countUp(node){
+  $$("[data-count]", node).forEach(el => {
+    const target = parseFloat(el.dataset.count), mode = el.dataset.fmt || "money";
+    const holder = el.closest("[style*='--d']") || el;
+    const delay = parseFloat(getComputedStyle(holder).getPropertyValue("--d")) || .5;
+    const t0 = performance.now() + delay*1000, dur = 900;
+    const out = v => el.textContent =
+      mode==="short" ? short(v) : mode==="plain" ? nf.format(Math.round(v)) :
+      mode==="area"  ? num(v)+" м²" : money(v);
+    (function step(now){
+      const p = Math.min(1, Math.max(0,(now-t0)/dur));
+      out(target * (1 - Math.pow(1-p,3)));
+      if(p < 1 && node.classList.contains("playing")) requestAnimationFrame(step);
+      else out(target);
+    })(performance.now());
+  });
+}
+
+/* ---------------------------------------------------------
+   4. Общие компоненты
+   --------------------------------------------------------- */
+function AppHeader(active){
+  return `<header class="appbar">
+    <button class="wordmark" data-go="home" aria-label="DZNOW, на главную">DZ<span class="hinge">N</span>OW</button>
+    <nav class="desknav">
+      ${[["home","Главная"],["projects","Мои дизайны"],["profile","Профиль"]].map(([r,t]) =>
+        `<button data-go="${r}"${active===r?' aria-current="page"':''}>${t}</button>`).join("")}
+    </nav>
+    <button class="avatar${active==="profile"?" on":""}" data-go="profile" aria-label="Профиль">${USER.initials}</button>
+  </header>`;
+}
+function BottomNavigation(active){
+  const item = (r,t,ic) => `<button class="nav-i" data-go="${r}"${active===r?' aria-current="page"':''}>${svg(ic)}<span>${t}</span></button>`;
+  return `<nav class="bottomnav mob-only"><div class="in">
+    ${item("home","Главная",I.home)}${item("projects","Мои дизайны",I.grid)}${item("profile","Профиль",I.user)}
+  </div></nav>`;
+}
+function PrimaryAction(label, note, action){
+  return `<div class="ctabar"><div class="in">
+    <button class="btn primary" data-act="${action}">${label}</button>
+    ${note ? '<div class="fmt">'+note+'</div>' : ''}
+  </div></div>`;
+}
+
+/* ---------------------------------------------------------
+   5. HomePage
+   --------------------------------------------------------- */
+function HomePage(){
+  const heroSc = SCENARIOS[0];
+  const rest = SCENARIOS.slice(1);
+  const recent = state.projects.slice(0,2);
+
+  const CategorySelector = `<div class="rail">${CATEGORIES.map(c =>
+    `<button class="cat" ${c.ready?'aria-pressed="'+(state.category===c.id)+'"':'disabled'} data-cat="${c.id}">
+       ${c.title}${c.ready?'':'<span class="soon">скоро</span>'}</button>`).join("")}</div>`;
+
+  const ScenarioHero = `<button class="sc-hero" data-scenario="${heroSc.id}">
+      ${preview({...BASE}, heroSc.layout)}
+      <div>
+        <div class="t">${heroSc.title}</div>
+        <div class="d">${heroSc.desc}</div>
+        <span class="go">Создать ${svg(I.chev)}</span>
+      </div>
+    </button>`;
+
+  const ScenarioPair = `<div class="sc-pair">${rest.map(s => {
+    const d = s.id==="mortgage" ? {...BASE, skin:"light"} : s.id==="digest" ? {...BASE, skin:"light"} : {...BASE, skin:"accent"};
+    return `<button class="sc${s.ready?"":" locked"}" ${s.ready?'data-scenario="'+s.id+'"':'data-soon="1"'}>
+      ${preview(d, s.layout)}
+      <div><div class="t">${s.title}</div><div class="d">${s.desc}</div>
+      ${s.ready?"":'<span class="badge-soon">скоро</span>'}</div></button>`;
+  }).join("")}</div>`;
+
+  const Templates = `<div class="tscroll">${TEMPLATES.map(t => `
+    <button class="tcard" data-template="${t.id}">
+      ${preview({...BASE, skin:t.skin}, t.layout)}
+      <div class="chips"><span class="tchip">${t.kind}</span>${t.motion?'<span class="tchip">анимация</span>':''}</div>
+      <div class="t">${t.title}</div><div class="u">Использовать</div>
+    </button>`).join("")}</div>`;
+
+  const Recent = recent.length ? recent.map(p => `
+    <button class="recent" data-open="${p.id}">
+      ${preview(p.data, p.layout)}
+      <div><div class="t">${esc(p.title)}</div>
+        <div class="m"><b>${short(p.data.price)}</b> · ${relTime(p.at)}</div></div>
+      <span class="cta">Продолжить ${svg(I.chev)}</span>
+    </button>`).join("") : '<div class="empty">Здесь появятся ваши последние макеты</div>';
+
+  return {
+    html: `<div class="screen">
+      ${AppHeader("home")}
+      <h1 class="h1">Что создаём?</h1>
+      <p class="sub">Готовый дизайн за несколько секунд</p>
+      ${CategorySelector}
+      <div class="h2">Что нужно сделать?</div>
+      <div class="scenarios">${ScenarioHero}${ScenarioPair}</div>
+      <div class="h2">Популярные шаблоны</div>
+      ${Templates}
+      <div class="h2">Недавние <button class="more" data-go="projects">Все</button></div>
+      ${Recent}
+    </div>${BottomNavigation("home")}`,
+    mount(root){
+      $$("[data-scenario]", root).forEach(b => b.onclick = () => openEditor(b.dataset.scenario));
+      $$("[data-template]", root).forEach(b => b.onclick = () => {
+        const t = TEMPLATES.find(x => x.id === b.dataset.template);
+        state.draft = { ...state.draft, skin:t.skin };
+        openEditor(t.layout === "figure" ? "figure" : "object");
+      });
+      $$("[data-soon]", root).forEach(b => b.onclick = () => sheet(
+        '<p>Этот сценарий появится в следующем обновлении. Сейчас доступны «Объект» и «Крупная цифра».</p>' +
+        '<button class="btn ghost si" data-close>Понятно</button>'));
+      $$("[data-open]", root).forEach(b => b.onclick = () => {
+        const p = state.projects.find(x => x.id === b.dataset.open);
+        state.draft = { ...p.data }; state.scenario = p.scenario; state.layout = p.layout;
+        go("editor");
+      });
+      $$("[data-cat]", root).forEach(b => b.onclick = () => { state.category = b.dataset.cat; go("home"); });
+    }
+  };
+}
+
+function openEditor(scenarioId){
+  const sc = SCENARIOS.find(s => s.id === scenarioId) || SCENARIOS[0];
+  state.scenario = sc.id; state.layout = sc.layout;
+  go("editor");
+}
+
+/* ---------------------------------------------------------
+   6. EditorPage
+   --------------------------------------------------------- */
+const FORM = [
+  { title:"Об объекте", rows:[
+    { k:"complex",  label:"ЖК / дом",   type:"text" },
+    { k:"rooms",    label:"Комнатность",type:"select", options:["Студия","1-комнатная","2-комнатная","3-комнатная","4-комнатная"] },
+    { k:"area",     label:"Площадь",    type:"number", unit:"м²",  step:"0.1" },
+    { k:"floor",    label:"Этаж",       type:"text" },
+    { k:"district", label:"Район",      type:"text" },
+    { k:"finish",   label:"Отделка",    type:"text" },
+    { k:"ready",    label:"Срок сдачи", type:"text" }
+  ]},
+  { title:"Цена", result:true, rows:[
+    { k:"price", label:"Цена",           type:"money",  unit:"₽" },
+    { k:"down",  label:"Первый взнос",   type:"number", unit:"%",   step:"1" },
+    { k:"rate",  label:"Ставка",         type:"number", unit:"%",   step:"0.1" },
+    { k:"term",  label:"Срок",           type:"number", unit:"лет", step:"1" }
+  ]},
+  { title:"Акцент", rows:[
+    { k:"tag", label:"Плашка", type:"text" }
+  ]}
+];
+const VARIANTS = [
+  { id:"dark",   title:"Тёмный",    css:"linear-gradient(135deg,#12161B 60%,#D8A25A 60%)" },
+  { id:"light",  title:"Светлый",   css:"linear-gradient(135deg,#F4F1EC 60%,#1F4B3F 60%)" },
+  { id:"accent", title:"Акцентный", css:"linear-gradient(135deg,#123A31 60%,#EFC488 60%)" }
+];
+
+function FormSection(sec, d){
+  const rows = sec.rows.map(f => {
+    const v = d[f.k];
+    if(f.type === "money")
+      return `<div class="row"><label for="f-${f.k}">${f.label}</label>
+        <input id="f-${f.k}" data-k="${f.k}" data-money="1" type="text" inputmode="numeric"
+          value="${nf.format(v||0)}">
+        <span class="unit">${f.unit}</span></div>`;
+    if(f.type === "select")
+      return `<div class="row"><label for="f-${f.k}">${f.label}</label>
+        <select id="f-${f.k}" data-k="${f.k}">${f.options.map(o =>
+          `<option${o===v?" selected":""}>${o}</option>`).join("")}</select></div>`;
+    return `<div class="row"><label for="f-${f.k}">${f.label}</label>
+      <input id="f-${f.k}" data-k="${f.k}" type="${f.type==='number'?'number':'text'}"
+        ${f.step?'step="'+f.step+'"':''} value="${esc(v)}" ${f.type==='number'?'inputmode="decimal"':''}>
+      ${f.unit?'<span class="unit">'+f.unit+'</span>':''}</div>`;
+  }).join("");
+  const result = sec.result ? `<div class="row result"><label>Платёж в месяц</label>
+      <span class="v" data-calc>≈ ${money(annuity(d))}</span></div>` : "";
+  return `<section class="section"><h3>${sec.title}</h3>
+    <div class="fieldset">${rows}${result}</div></section>`;
+}
+
+function AssetUploader(d){
+  return `<section class="section"><h3>Фото или планировка</h3>
+    <div class="upl">
+      <div class="thumb">${d.planImage ? '<img src="'+d.planImage+'" alt="">' : svg(I.image)}</div>
+      <div><div class="t">${d.planImage ? "Изображение загружено" : "Своя планировка"}</div>
+        <div class="d">${d.planImage ? "Показывается вместо схемы" : "PNG или JPG, вертикально или квадрат"}</div></div>
+      <button class="act" data-upload>${d.planImage ? "Заменить" : "+ Загрузить"}</button>
+    </div>
+    ${d.planImage ? '<div class="hint"><button class="act" data-drop-plan style="color:var(--muted);font-weight:600">Убрать и вернуть схему</button></div>' : ''}
+    <input type="file" id="file-plan" accept="image/*">
+  </section>`;
+}
+
+function BrandSelector(d){
+  return `<section class="section"><h3>Оформление</h3>
+    <div class="brandcard">
+      <div class="mark" style="background:${AGENCY.color}">${AGENCY.mark}</div>
+      <div><div class="t">${AGENCY.name}</div><div class="d">Логотип, цвет и подпись подставляются автоматически</div></div>
+    </div>
+    <div class="variants">${VARIANTS.map(v =>
+      `<button class="variant" data-skin="${v.id}" aria-pressed="${d.skin===v.id}">
+        <span class="sw" style="background:${v.css}"></span>${v.title}</button>`).join("")}</div>
+  </section>`;
+}
+
+function EditorPage(){
+  const d = state.draft;
+  const sc = SCENARIOS.find(s => s.id === state.scenario) || SCENARIOS[0];
+  const left = `<div class="left"><div class="stagewrap">
+      ${preview(d, state.layout, "pv-main")}
+      <button class="playbtn" data-play>${svg('<path d="M7 4.5v15l12-7.5z"/>')} Просмотреть анимацию</button>
+    </div></div>`;
+  const right = `<div class="right">
+      ${FORM.map(s => FormSection(s,d)).join("")}
+      ${AssetUploader(d)}
+      ${BrandSelector(d)}
+      ${PrimaryAction("Создать", "Story<br>1080×1920", "create")}
+    </div>`;
+
+  return {
+    html: `<div class="screen">
+      <header class="edbar">
+        <button class="back" data-go="home">${svg(I.back)} Назад</button>
+        <div class="title">${sc.title}</div>
+        <button class="iconbtn" style="margin-left:auto" data-menu aria-label="Ещё">${svg(I.dots)}</button>
+      </header>
+      <div class="editor-grid">${left}${right}</div>
+      <div class="cta-space"></div>
+    </div>`,
+    mount(root){
+      const storyNode = $(".pv-main .story", root);
+      const calc = $("[data-calc]", root);
+
+      const refresh = () => {
+        paintStory(storyNode, state.draft, state.layout);
+        fitAll(root);
+        if(calc) calc.textContent = "≈ " + money(annuity(state.draft));
+      };
+
+      $$("[data-k]", root).forEach(el => {
+        const isNum = el.type === "number", isMoney = el.dataset.money === "1";
+        const upd = () => {
+          const raw = el.value;
+          state.draft[el.dataset.k] =
+            isMoney ? (parseFloat(raw.replace(/[^\d]/g,"")) || 0) :
+            isNum   ? (parseFloat(raw) || 0) : raw;
+          refresh();
+        };
+        el.addEventListener("input", upd);
+        el.addEventListener("change", upd);
+        if(isMoney) el.addEventListener("blur", () => { el.value = nf.format(state.draft[el.dataset.k]); });
+      });
+
+      $$("[data-skin]", root).forEach(b => b.onclick = () => {
+        state.draft.skin = b.dataset.skin;
+        $$("[data-skin]", root).forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+        refresh();
+      });
+
+      $("[data-play]", root).onclick = e => {
+        playStory(storyNode);
+        const btn = e.currentTarget;
+        btn.dataset.busy = "1";
+        setTimeout(() => btn.removeAttribute("data-busy"), 2700);
+      };
+
+      const file = $("#file-plan", root);
+      $("[data-upload]", root).onclick = () => file.click();
+      file.onchange = e => {
+        const f = e.target.files && e.target.files[0]; if(!f) return;
+        const r = new FileReader();
+        r.onload = () => { state.draft.planImage = r.result; go("editor"); };
+        r.readAsDataURL(f);
+      };
+      const drop = $("[data-drop-plan]", root);
+      if(drop) drop.onclick = () => { state.draft.planImage = null; go("editor"); };
+
+      $("[data-act='create']", root).onclick = () => go("render");
+
+      $("[data-menu]", root).onclick = () => sheet(`
+        <button class="si" data-act="replay">Просмотреть анимацию</button>
+        <button class="si" data-act="reset">Сбросить данные объекта</button>
+        <button class="si danger" data-act="exit">Выйти без сохранения</button>`, {
+        replay(){ playStory(storyNode); },
+        reset(){ state.draft = { ...BASE, skin:state.draft.skin }; go("editor"); },
+        exit(){ state.draft = { ...BASE }; go("home"); }
+      });
+    }
+  };
+}
+
+/* ---------------------------------------------------------
+   7. RenderPage
+   --------------------------------------------------------- */
+const RENDER_STEPS = ["Подготавливаем изображения","Добавляем данные","Собираем анимацию","Готовим файл"];
+
+function RenderPage(){
+  return {
+    html: `<div class="renderwrap">
+      <div style="position:relative">${preview(state.draft, state.layout)}<span class="shimmer"></span></div>
+      <div style="text-align:center">
+        <div style="font-size:21px;font-weight:700;letter-spacing:-.02em">Собираем ваш дизайн</div>
+        <div class="sub" style="font-size:13.5px">Обычно занимает несколько секунд</div>
+      </div>
+      <div class="rbar"><i></i></div>
+      <div class="rsteps">${RENDER_STEPS.map((s,i) =>
+        `<div class="rstep${i===0?" active":""}" data-step="${i}">
+          <span class="dot">${svg(I.check)}</span>${s}</div>`).join("")}</div>
+    </div>`,
+    mount(root){
+      const steps = $$("[data-step]", root), bar = $(".rbar i", root);
+      let i = 0;
+      const tick = () => {
+        if(i > 0) steps[i-1].className = "rstep done";
+        if(i < steps.length){
+          steps[i].className = "rstep active";
+          bar.style.width = ((i+1)/steps.length*100) + "%";
+          i++;
+          setTimeout(tick, 620 + Math.random()*260);
+        } else {
+          setTimeout(finishRender, 420);
+        }
+      };
+      setTimeout(tick, 260);
+    }
+  };
+}
+
+function finishRender(){
+  const p = {
+    id:"p" + Date.now(),
+    title:state.draft.complex,
+    scenario:state.scenario,
+    layout:state.layout,
+    at:Date.now(),
+    data:{ ...state.draft }
+  };
+  state.projects = [p, ...state.projects.filter(x => x.title !== p.title || x.layout !== p.layout)].slice(0,12);
+  state.lastProject = p;
+  go("result");
+}
+
+/* ---------------------------------------------------------
+   8. ResultPage
+   --------------------------------------------------------- */
+function ResultPage(){
+  const d = state.lastProject ? state.lastProject.data : state.draft;
+  const layout = state.lastProject ? state.lastProject.layout : state.layout;
+  const meta = state.format === "mp4" ? "MP4 · 1080×1920 · 8 сек" : "PNG · 1080×1920";
+  return {
+    html: `<div class="screen">
+      <header class="edbar">
+        <button class="back" data-go="editor">${svg(I.back)} Изменить</button>
+      </header>
+      <div class="result-top">
+        <div class="ok">${svg(I.check)}</div>
+        <h1>Готово</h1>
+        <p>${meta}</p>
+      </div>
+      <div class="fmtpick">
+        <button class="fmt-o" data-fmt="png" aria-pressed="${state.format==='png'}">Картинка</button>
+        <button class="fmt-o" data-fmt="mp4" aria-pressed="${state.format==='mp4'}">Видео</button>
+      </div>
+      <div class="stagewrap" style="margin-top:14px">
+        ${preview(d, layout, "pv-main")}
+        <button class="playbtn" data-play>${svg('<path d="M7 4.5v15l12-7.5z"/>')} Просмотреть анимацию</button>
+      </div>
+      <div class="result-actions">
+        <button class="btn primary" data-act="download">${svg(I.down)} Скачать</button>
+        <div class="pair">
+          <button class="btn line" data-act="share">${svg(I.share)} Поделиться</button>
+          <button class="btn line" data-go="editor">Изменить</button>
+        </div>
+        <button class="textlink" data-act="again">Сделать ещё один</button>
+      </div>
+      <div style="height:22px"></div>
+    </div>${BottomNavigation("")}`,
+    mount(root){
+      const node = $(".pv-main .story", root);
+      $("[data-play]", root).onclick = () => playStory(node);
+      $$("[data-fmt]", root).forEach(b => b.onclick = () => { state.format = b.dataset.fmt; go("result"); });
+      $("[data-act='again']", root).onclick = () => { state.draft = { ...BASE }; go("home"); };
+      $("[data-act='share']", root).onclick = async () => {
+        const text = state.draft.complex + " · " + short(state.draft.price);
+        if(navigator.share){ try{ await navigator.share({title:"DZNOW", text}); return; }catch(e){} }
+        sheet('<p>В Telegram здесь открывается системное «Поделиться»: макет уходит в чат, канал или сторис одним касанием.</p><button class="btn ghost si" data-close>Понятно</button>');
+      };
+      $("[data-act='download']", root).onclick = () => {
+        if(state.format === "mp4"){
+          sheet('<p>Видео собирается на сервере: анимация рендерится покадрово и склеивается в MP4. В прототипе доступна анимация в превью и картинка PNG.</p><button class="btn ghost si" data-close>Понятно</button>');
+          return;
+        }
+        exportPNG(d, layout);
+      };
+    }
+  };
+}
+
+/* экспорт: рисуем отдельный узел 1080×1920 и снимаем его */
+async function exportPNG(d, layout){
+  const holder = document.createElement("div");
+  holder.style.cssText = "position:fixed;left:-20000px;top:0;width:1080px;height:1920px;z-index:-1";
+  const node = document.createElement("div");
+  holder.appendChild(node);
+  document.body.appendChild(holder);
+  paintStory(node, d, layout);
+  node.style.transform = "none";
+  try{
+    if(document.fonts && document.fonts.ready) await document.fonts.ready;
+    const canvas = await html2canvas(node, {width:1080,height:1920,scale:1,backgroundColor:null,
+      windowWidth:1080,windowHeight:1920,useCORS:true,logging:false});
+    const url = canvas.toDataURL("image/png");
+    const a = document.createElement("a");
+    a.href = url; a.download = "dznow_" + Date.now() + ".png";
+    document.body.appendChild(a); a.click(); a.remove();
+    sheet('<img src="'+url+'" alt="Готовый макет"><p>Если скачивание не началось автоматически — сохраните картинку отсюда: долгое нажатие или правый клик.</p><button class="btn ghost si" data-close>Закрыть</button>');
+  }catch(err){
+    sheet('<p>Не удалось собрать картинку: '+esc(err.message)+'</p><button class="btn ghost si" data-close>Закрыть</button>');
+  }finally{ holder.remove(); }
+}
+
+/* ---------------------------------------------------------
+   9. ProjectsPage
+   --------------------------------------------------------- */
+function ProjectsPage(){
+  const list = state.projects;
+  return {
+    html: `<div class="screen">
+      ${AppHeader("projects")}
+      <h1 class="h1">Мои дизайны</h1>
+      <p class="sub">${list.length} ${plural(list.length,["макет","макета","макетов"])} · хранятся 30 дней</p>
+      ${list.length ? '<div class="plist">' + list.map(p => `
+        <div class="pitem">
+          ${preview(p.data, p.layout)}
+          <div>
+            <div class="t">${esc(p.title)}</div>
+            <div class="m">${(SCENARIOS.find(s=>s.id===p.scenario)||{}).title} · ${whenLabel(p.at)}</div>
+            <div class="acts">
+              <button data-open="${p.id}">Открыть</button>
+              <button class="rep" data-repeat="${p.id}">Повторить</button>
+            </div>
+          </div>
+        </div>`).join("") + '</div>'
+      : '<div class="empty">Пока пусто. Создайте первый макет на главной.</div>'}
+    </div>${BottomNavigation("projects")}`,
+    mount(root){
+      const load = id => {
+        const p = state.projects.find(x => x.id === id);
+        state.draft = { ...p.data }; state.scenario = p.scenario; state.layout = p.layout;
+      };
+      $$("[data-open]", root).forEach(b => b.onclick = () => { load(b.dataset.open); go("editor"); });
+      $$("[data-repeat]", root).forEach(b => b.onclick = () => {
+        load(b.dataset.repeat);
+        go("editor");
+        setTimeout(() => {
+          const el = $("#f-price");
+          if(el){ el.focus(); el.select && el.select(); el.scrollIntoView({block:"center",behavior:"smooth"}); }
+        }, 60);
+      });
+    }
+  };
+}
+
+/* ---------------------------------------------------------
+   10. ProfilePage
+   --------------------------------------------------------- */
+function ProfilePage(){
+  const made = state.projects.length;
+  return {
+    html: `<div class="screen">
+      ${AppHeader("profile")}
+      <div class="prof">
+        <div class="av">${USER.initials}</div>
+        <div><div class="n">${USER.name}</div><div class="r">${USER.role}</div></div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="v">${made}</div><div class="k">макетов</div></div>
+        <div class="stat"><div class="v">2</div><div class="k">шаблона</div></div>
+        <div class="stat"><div class="v">∞</div><div class="k">до 1 окт.</div></div>
+      </div>
+      <div class="rows">
+        <div class="r">Агентство<span class="v">${AGENCY.name}</span></div>
+        <div class="r">Оформление<span class="v">Фирменное</span></div>
+        <div class="r">Категория<span class="v">Недвижимость</span></div>
+        <div class="r">Тариф<span class="v">Пробный период</span></div>
+      </div>
+      <p class="hint" style="text-align:center;margin-top:22px">DZNOW · прототип · данные хранятся только в этой сессии</p>
+    </div>${BottomNavigation("profile")}`,
+    mount(){}
+  };
+}
+
+/* ---------------------------------------------------------
+   11. Роутер и шит
+   --------------------------------------------------------- */
+const PAGES = { home:HomePage, editor:EditorPage, render:RenderPage, result:ResultPage,
+                projects:ProjectsPage, profile:ProfilePage };
+
+function go(route){
+  state.route = route;
+  const page = PAGES[route]();
+  const root = document.getElementById("app");
+  root.innerHTML = page.html;
+  hydratePreviews(root);
+  $$("[data-go]", root).forEach(b => b.onclick = () => go(b.dataset.go));
+  page.mount(root);
+  window.scrollTo(0, 0);
+}
+
+function sheet(html, actions){
+  const scrim = document.createElement("div");
+  scrim.className = "scrim";
+  scrim.innerHTML = '<div class="sheet"><div class="grab"></div>' + html + '</div>';
+  const close = () => scrim.remove();
+  scrim.onclick = e => { if(e.target === scrim) close(); };
+  $$("[data-close]", scrim).forEach(b => b.onclick = close);
+  if(actions) Object.keys(actions).forEach(k => {
+    const b = $("[data-act='"+k+"']", scrim);
+    if(b) b.onclick = () => { close(); actions[k](); };
+  });
+  document.body.appendChild(scrim);
+}
+
+let fitTimer;
+window.addEventListener("resize", () => { clearTimeout(fitTimer); fitTimer = setTimeout(() => fitAll(), 80); });
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(() => fitAll());
+
+go("home");
+})();
+
+</script>
+</body>
+</html>

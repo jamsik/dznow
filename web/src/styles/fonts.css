@@ -1,0 +1,37 @@
+/* Локальные шрифты.
+ *
+ * Зачем: рендер-воркер открывает страницу в headless-Chromium. Если шрифты
+ * тянутся из сети, а её на сервере нет (или она моргнула) — Chromium молча
+ * подставит системный шрифт, и макет уедет. Файл рядом с приложением этот
+ * риск снимает.
+ *
+ * Как включить:
+ *   1) powershell -ExecutionPolicy Bypass -File tools\fetch-fonts.ps1
+ *   2) раскомментировать import "./styles/fonts.css" в src/main.jsx и src/render-entry.jsx
+ *   3) удалить <link> на fonts.googleapis.com в index.html и render.html
+ */
+
+@font-face { font-family: "Onest"; src: url("/fonts/onest-400.woff2") format("woff2");
+             font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Onest"; src: url("/fonts/onest-500.woff2") format("woff2");
+             font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "Onest"; src: url("/fonts/onest-600.woff2") format("woff2");
+             font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: "Onest"; src: url("/fonts/onest-700.woff2") format("woff2");
+             font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Onest"; src: url("/fonts/onest-800.woff2") format("woff2");
+             font-weight: 800; font-style: normal; font-display: swap; }
+
+/* заголовки тёмного и акцентного вариантов макета */
+@font-face { font-family: "Unbounded"; src: url("/fonts/unbounded-700.woff2") format("woff2");
+             font-weight: 700; font-style: normal; font-display: swap; }
+
+/* заголовки светлого варианта макета */
+@font-face { font-family: "Cormorant Garamond"; src: url("/fonts/cormorant-garamond-600.woff2") format("woff2");
+             font-weight: 600; font-style: normal; font-display: swap; }
+
+/* цифры: цена, платёж, площади */
+@font-face { font-family: "IBM Plex Mono"; src: url("/fonts/ibm-plex-mono-400.woff2") format("woff2");
+             font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "IBM Plex Mono"; src: url("/fonts/ibm-plex-mono-500.woff2") format("woff2");
+             font-weight: 500; font-style: normal; font-display: swap; }

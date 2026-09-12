@@ -1,0 +1,17 @@
+# Концы строк. Без этого Windows-клиент может закоммитить скрипты с CRLF,
+# и на сервере bash споткнётся на невидимом \r: «bad interpreter».
+* text=auto eol=lf
+
+*.sh        text eol=lf
+Dockerfile  text eol=lf
+*.yml       text eol=lf
+
+# Батникам и PowerShell на Windows нужен CRLF
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+
+# Картинки и шрифты не трогаем
+*.png  binary
+*.jpg  binary
+*.woff2 binary
+*.ico  binary

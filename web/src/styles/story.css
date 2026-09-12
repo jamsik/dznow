@@ -1,0 +1,169 @@
+/* =========================================================
+   STORY TEMPLATE — 1080×1920 canvas (shared by preview,
+   thumbnails, render screen and export)
+   ========================================================= */
+
+/* Шаблон обязан быть самодостаточным: render.html подключает только этот файл,
+   без дизайн-системы приложения. Без border-box ширина 1080px складывалась
+   с падингами 76px и полотно вылезало за границы кадра на 152px по горизонтали
+   и по вертикали — в приложении этого не было видно, потому что там сброс
+   приходил из app.css. */
+.story, .story *{ box-sizing: border-box; }
+
+.story{
+  width:1080px;height:1920px;position:absolute;top:0;left:0;transform-origin:top left;
+  --bg:#12161B; --panel:#1B222A; --fg:#FFFFFF; --dim:#9AA7B4;
+  --brand:#D8A25A; --brand-ink:#12161B; --line-c:rgba(255,255,255,.14);
+  --display:"Unbounded"; --plan-stroke:#D8A25A; --plan-fill:rgba(216,162,90,.08);
+  --glow:rgba(216,162,90,.16);
+  background:var(--bg);color:var(--fg);
+  font-family:var(--story-ui,"Onest"),"Onest","Manrope",sans-serif;
+  padding:96px 76px 84px;display:flex;flex-direction:column;overflow:hidden;
+}
+.story.skin-light{
+  --bg:#F4F1EC; --panel:#FFFFFF; --fg:#1A1714; --dim:#7A736A;
+  --brand:#1F4B3F; --brand-ink:#FFFFFF; --line-c:rgba(26,23,20,.12);
+  --display:"Cormorant Garamond"; --plan-stroke:#1F4B3F; --plan-fill:rgba(31,75,63,.07);
+  --glow:rgba(31,75,63,.13);
+}
+.story.skin-accent{
+  --bg:#123A31; --panel:#17453A; --fg:#F3F7F4; --dim:#9FC0B4;
+  --brand:#EFC488; --brand-ink:#123A31; --line-c:rgba(239,196,136,.22);
+  --display:"Unbounded"; --plan-stroke:#EFC488; --plan-fill:rgba(239,196,136,.08);
+  --glow:rgba(239,196,136,.16);
+}
+.story::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  /* Никаких color-mix() и прочего свежего CSS в шаблоне: клиентский экспорт
+     (html2canvas) такие цвета не разбирает и падает на «unsupported color function».
+     Свечение задаётся готовым rgba в каждом варианте оформления. */
+  background:radial-gradient(90% 55% at 78% 6%, var(--glow), transparent 62%);
+}
+.story > *{position:relative;z-index:1}
+
+/* Фон: картинка ЖК под всем содержимым и завеса цветом фона поверх неё.
+   Завеса — обычный linear-gradient с rgba, а не mask: маску не понимает
+   клиентская сборка картинки. */
+.s-bg{position:absolute;inset:0;z-index:0;overflow:hidden}
+.s-bg img{width:100%;height:100%;object-fit:cover;display:block}
+.s-bg .s-veil{position:absolute;inset:0;display:block}
+
+/* с фоном панели становятся полупрозрачными, иначе картинка не читается */
+.story.has-bg .fact{background:var(--panel-veil,transparent);backdrop-filter:none}
+/* Чертёж — не цифра: линии тонкие и по фотографии теряются сильнее, поэтому
+   у его окна своя плотность, вплоть до полностью непрозрачной. */
+.story.has-bg .s-plan{background:var(--plan-panel,transparent);backdrop-filter:none;border-color:var(--line-c)}
+
+.s-top{display:flex;align-items:center;gap:20px;margin-bottom:52px}
+.s-logo{
+  width:76px;height:76px;border-radius:20px;background:var(--brand);color:var(--brand-ink);
+  display:grid;place-items:center;font-family:"IBM Plex Mono",monospace;font-size:32px;font-weight:500;flex:none;
+}
+.s-agency{font-size:calc(30px * var(--ts,1));font-weight:700;letter-spacing:-.01em}
+.s-city{font-size:calc(23px * var(--ts,1));color:var(--dim);margin-top:4px}
+.s-tag{
+  margin-left:auto;border:2px solid var(--brand);color:var(--brand);border-radius:999px;
+  padding:12px 26px;font-size:calc(23px * var(--ts,1));font-weight:600;white-space:nowrap;
+}
+
+.s-plan{
+  background:var(--panel);border:1px solid var(--line-c);border-radius:36px;
+  padding:34px;display:grid;place-items:center;height:640px;overflow:hidden;margin-bottom:44px;
+}
+.s-plan svg{width:100%;height:100%}
+.s-plan-fit{
+  width:100%;height:100%;display:grid;place-items:center;
+  transform-origin:center;transition:transform .12s linear;
+}
+.s-plan img{max-width:100%;max-height:100%;object-fit:contain;border-radius:18px}
+.plan-wall{fill:none;stroke:var(--plan-stroke);stroke-width:7;stroke-linecap:square;stroke-linejoin:miter}
+.plan-inner{fill:none;stroke:var(--plan-stroke);stroke-width:4;opacity:.85}
+.plan-room{fill:var(--plan-fill)}
+.plan-label{fill:var(--fg);font-family:var(--story-ui,"Onest"),sans-serif;font-size:calc(20px * var(--ts,1));font-weight:600}
+.plan-area{fill:var(--dim);font-family:"IBM Plex Mono",monospace;font-size:calc(17px * var(--ts,1))}
+.plan-dot{fill:var(--brand)}
+
+.s-title{font-family:var(--display),var(--story-ui,"Onest"),serif;font-size:62px;line-height:1.06;font-weight:700;letter-spacing:-.02em}
+.s-sub{font-size:calc(26px * var(--ts,1));color:var(--dim);margin-top:14px}
+
+.s-price{display:flex;align-items:baseline;gap:18px;margin-top:34px;font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+.s-price .v{font-size:78px;font-weight:500;letter-spacing:-.03em;line-height:1}
+.s-price .c{font-size:calc(26px * var(--ts,1));color:var(--dim);font-family:var(--story-ui,"Onest"),sans-serif;font-weight:600}
+
+.s-facts{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:38px}
+.fact{background:var(--panel);border:1px solid var(--line-c);border-radius:24px;padding:24px 26px;display:flex;align-items:center;gap:18px}
+.fact .ic{width:46px;height:46px;flex:none;stroke:var(--brand);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.fact .k{font-size:calc(19px * var(--ts,1));color:var(--dim);letter-spacing:.02em}
+.fact .v{font-size:calc(31px * var(--ts,1));font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
+
+.s-mortgage{
+  margin-top:auto;background:var(--brand);color:var(--brand-ink);border-radius:28px;
+  padding:32px 34px;display:flex;align-items:center;gap:26px;
+}
+.s-mortgage .lab{font-size:calc(22px * var(--ts,1));font-weight:600;opacity:.8}
+.s-mortgage .amt{font-family:"IBM Plex Mono",monospace;font-size:56px;font-weight:500;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.05}
+.s-mortgage .terms{margin-left:auto;text-align:right;font-size:calc(20px * var(--ts,1));line-height:1.5;font-weight:600;opacity:.85}
+
+.s-signature{margin-top:34px}
+.s-foot{display:flex;align-items:center;gap:20px;font-size:calc(24px * var(--ts,1))}
+.s-foot .who{font-weight:700}
+.s-foot .tel{margin-left:auto;font-family:"IBM Plex Mono",monospace;color:var(--dim)}
+.s-contacts{margin-top:10px;font-size:calc(21px * var(--ts,1));color:var(--dim);font-family:"IBM Plex Mono",monospace}
+
+/* логотип компании вместо буквенного знака */
+.s-logo-img{height:76px;max-width:280px;width:auto;object-fit:contain;flex:none}
+
+/* район как первая строка, когда название компании выключено */
+.s-city.lead{font-size:calc(28px * var(--ts,1));color:var(--fg);font-weight:600;margin-top:0}
+.s-tag.solo{margin-left:0}
+
+/* без загруженной планировки макет перестраивается:
+   заголовок и цена занимают верх, факты и ипотека уходят вниз */
+.story.no-plan.lay-card .s-title{font-size:76px;margin-top:20px}
+.story.no-plan.lay-card .s-sub{font-size:calc(30px * var(--ts,1))}
+.story.no-plan.lay-card .s-price{margin-top:46px}
+.story.no-plan.lay-card .s-price .v{font-size:92px}
+.story.no-plan.lay-card .s-facts{margin-top:auto;padding-top:60px}
+
+/* layout B — крупная цифра */
+.story.lay-figure{padding:110px 76px 84px}
+.story.lay-figure .s-plan{
+  position:absolute;inset:auto -210px -300px auto;width:1180px;height:900px;
+  background:none;border:none;opacity:.11;z-index:0;padding:0;
+  -webkit-mask-image:linear-gradient(to bottom,#000 40%,transparent 92%);
+  mask-image:linear-gradient(to bottom,#000 40%,transparent 92%);
+}
+.story.lay-figure .s-hero{margin:60px 0 0}
+.story.lay-figure .s-kicker{font-size:calc(28px * var(--ts,1));color:var(--dim);letter-spacing:.06em;text-transform:uppercase}
+.story.lay-figure .s-big{
+  font-family:"IBM Plex Mono",monospace;font-size:150px;line-height:1;font-weight:500;letter-spacing:-.05em;
+  margin-top:18px;font-variant-numeric:tabular-nums;
+}
+.story.lay-figure .s-big small{font-size:52px;color:var(--dim);letter-spacing:0}
+.story.lay-figure .s-title{font-size:50px;margin-top:44px}
+.story.lay-figure .s-list{margin-top:52px;display:grid;border-top:1px solid var(--line-c)}
+.story.lay-figure .row{display:flex;align-items:baseline;gap:20px;padding:26px 4px;border-bottom:1px solid var(--line-c);font-size:calc(28px * var(--ts,1));min-height:0}
+.story.lay-figure .row .k{color:var(--dim)}
+.story.lay-figure .row .v{margin-left:auto;font-weight:700;font-variant-numeric:tabular-nums}
+
+/* animation */
+@keyframes s-rise{from{opacity:0;transform:translateY(38px)}to{opacity:1;transform:none}}
+@keyframes s-pop{from{opacity:0;transform:scale(.86)}to{opacity:1;transform:none}}
+@keyframes s-draw{from{stroke-dashoffset:var(--len)}to{stroke-dashoffset:0}}
+@keyframes s-fade{from{opacity:0}to{opacity:1}}
+.story.playing .anim{animation:s-rise .78s cubic-bezier(.16,.9,.24,1) both;animation-delay:var(--d,0s)}
+.story.playing .anim-pop{animation:s-pop .55s cubic-bezier(.2,1.3,.5,1) both;animation-delay:var(--d,0s)}
+.story.playing .plan-wall,.story.playing .plan-inner{animation:s-draw 1.15s ease-out both;animation-delay:var(--d,.15s)}
+.story.playing .plan-room,.story.playing .plan-label,.story.playing .plan-area,.story.playing .plan-dot{animation:s-fade .5s ease both;animation-delay:var(--d,1s)}
+/* System "reduce motion" must not silently kill a playback the user asked for:
+   only automatic playback (.playing without .force) is suppressed. */
+@media (prefers-reduced-motion:reduce){
+  .story.playing:not(.force) .anim,
+  .story.playing:not(.force) .anim-pop,
+  .story.playing:not(.force) .plan-wall,
+  .story.playing:not(.force) .plan-inner,
+  .story.playing:not(.force) .plan-room,
+  .story.playing:not(.force) .plan-label,
+  .story.playing:not(.force) .plan-area,
+  .story.playing:not(.force) .plan-dot{animation:none}
+}

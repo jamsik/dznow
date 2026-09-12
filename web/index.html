@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+  <title>DZNOW</title>
+  <link rel="icon" href="/icon.svg">
+  <!-- Шрифты из сети. После tools\fetch-fonts.ps1 эти три строки удалить. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- TODO: перед продом положить шрифты локально (self-host), иначе рендер-воркер
+       и Mini App зависят от внешней сети и могут подставить fallback. -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Golos+Text:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Montserrat:wght@400;500;600;700;800&family=Onest:wght@400;500;600;700;800&family=Oswald:wght@400;500;600;700&family=PT+Serif:wght@400;700&family=Playfair+Display:wght@600;700;800&family=Rubik:wght@400;500;600;700;800&family=Unbounded:wght@600;700&display=swap">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <!-- DZNOW boot guard: если модуль не загрузился или упал до React,
+       белый экран заменяется текстом ошибки — иначе причину видно только в консоли. -->
+  <script>
+    (function () {
+      function show(title, detail) {
+        var root = document.getElementById("root");
+        if (!root || root.childElementCount) return;
+        root.innerHTML =
+          '<div style="font:15px/1.5 system-ui;padding:28px;max-width:760px;margin:0 auto;color:#0A0714">' +
+          '<h1 style="font-size:22px;margin:0 0 10px">Приложение не запустилось</h1>' +
+          '<p style="margin:0 0 14px;color:#736E8C">' + title + '</p>' +
+          '<pre style="white-space:pre-wrap;background:#EEEBFB;padding:14px;border-radius:12px;' +
+          'font:12.5px/1.6 ui-monospace,monospace;overflow-x:auto">' + detail + '</pre></div>';
+      }
+      window.addEventListener("error", function (e) {
+        show("Ошибка при загрузке кода:", (e.message || String(e.error || "")) +
+          (e.filename ? "\n" + e.filename + ":" + e.lineno : ""));
+      }, true);
+      window.addEventListener("unhandledrejection", function (e) {
+        show("Необработанная ошибка:", String((e.reason && e.reason.message) || e.reason || ""));
+      });
+    })();
+  </script>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>

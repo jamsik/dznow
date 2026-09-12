@@ -1,0 +1,20 @@
+# Что не должно попадать в контекст сборки: оно либо пересобирается внутри,
+# либо вообще не имеет отношения к серверу.
+.git
+.gitignore
+node_modules
+web/node_modules
+web/dist
+api/data
+api/.venv
+api/.env
+web/.env
+.env
+data
+prototype
+tools
+*.md
+__pycache__
+*.pyc
+.DS_Store
+Запустить DZNOW.bat

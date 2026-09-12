@@ -1,0 +1,80 @@
+# DZNOW рядом с тем, что уже работает на сервере.
+#
+# Свой проект (name), свои тома, свой образ — соседние контейнеры не трогаются.
+# Наружу по умолчанию ничего не торчит: app слушает только 127.0.0.1, а адрес
+# в интернет даёт либо ваш прокси, либо один из профилей ниже.
+#
+#   docker compose up -d                      только app + bot
+#   docker compose --profile caddy up -d      + Caddy: свой домен и https
+#   docker compose --profile tunnel up -d     + Cloudflare-туннель: https без домена
+#
+# Профиль выбирается один. Если прокси на сервере уже есть — не нужен ни один:
+# направьте его на 127.0.0.1:8010.
+
+name: dznow
+
+services:
+  app:
+    build:
+      context: .
+      args:
+        # Зашивается в бандл на сборке. Меняли — пересоберите: docker compose build app
+        VITE_API_BASE: /api
+        VITE_BOT_USERNAME: ${BOT_USERNAME:-}
+    image: dznow-app
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATA_DIR: /data
+      # Рендер-воркер открывает страницу внутри этого же контейнера.
+      RENDER_URL: http://127.0.0.1:8010/render.html
+      CHROMIUM_NO_SANDBOX: "1"
+    volumes:
+      # Готовые PNG и база проектов переживают пересборку образа.
+      - dznow-data:/data
+    ports:
+      # Только на локальный интерфейс: снаружи сюда не достучаться,
+      # наружу выпускает прокси. Порт заняли — поменяйте APP_BIND в .env.
+      - "${APP_BIND:-127.0.0.1:8010}:8010"
+
+  bot:
+    build:
+      context: .
+      dockerfile: bot/Dockerfile
+    image: dznow-bot
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      app:
+        condition: service_healthy
+
+  # --- https своим доменом ---------------------------------------------
+  caddy:
+    image: caddy:2-alpine
+    profiles: ["caddy"]
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on: [app]
+
+  # --- https без домена --------------------------------------------------
+  # Выдаёт адрес вида https://что-то.trycloudflare.com. Аккаунт не нужен,
+  # порты открывать не нужно, но адрес меняется при каждом перезапуске —
+  # после старта возьмите его командой  bash tools/tunnel-url.sh
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    profiles: ["tunnel"]
+    restart: unless-stopped
+    command: tunnel --no-autoupdate --url http://app:8010
+    depends_on: [app]
+
+volumes:
+  dznow-data:
+  caddy-data:
+  caddy-config:
