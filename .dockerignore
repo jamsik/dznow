@@ -10,7 +10,7 @@ api/.venv
 api/.env
 web/.env
 .env
-data
+/data
 prototype
 tools
 *.md
