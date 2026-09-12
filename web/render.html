@@ -3,10 +3,9 @@
 <head>
   <meta charset="utf-8">
   <title>DZNOW render</title>
-  <!-- Шрифты из сети. После tools\fetch-fonts.ps1 эти три строки удалить. -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Golos+Text:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Montserrat:wght@400;500;600;700;800&family=Onest:wght@400;500;600;700;800&family=Oswald:wght@400;500;600;700&family=PT+Serif:wght@400;700&family=Playfair+Display:wght@600;700;800&family=Rubik:wght@400;500;600;700;800&family=Unbounded:wght@600;700&display=swap">
+  <!-- Шрифты: подменяются на локальные скриптом web/scripts/fetch-fonts.mjs
+       при сборке образа. Пока он не отработал — внутри @import на Google. -->
+  <link rel="stylesheet" href="/fonts/fonts.css">
   <style>html,body{margin:0;padding:0;background:#000;width:1080px;height:1920px;overflow:hidden}</style>
 </head>
 <body>

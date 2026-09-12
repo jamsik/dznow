@@ -14,6 +14,14 @@ COPY web/package.json web/package-lock.json* ./
 RUN npm ci --no-audit --no-fund
 
 COPY web/ ./
+
+# Шрифты внутрь образа. После этого рендер на сервере не ходит за ними
+# в Google — а это была решающая задержка в кадре: каждый макет ждал
+# fonts.gstatic.com по сети из серверной стойки.
+# Сеть на сборке недоступна — скрипт молча сдаётся, остаётся прежний
+# путь через Google. Образ собирается в любом случае.
+RUN node scripts/fetch-fonts.mjs
+
 # VITE_* читаются на сборке и зашиваются в бандл: поменять их потом,
 # не пересобрав образ, нельзя. Отсюда args, а не environment в compose.
 ARG VITE_API_BASE=/api

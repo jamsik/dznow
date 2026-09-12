@@ -44,6 +44,11 @@ export function initTelegram() {
     const bg = app.themeParams?.bg_color;
     if (bg) document.documentElement.style.setProperty("--tg-bg", bg);
 
+    // Свайп вниз по содержимому сворачивал окно приложения: листаешь список
+    // объектов — Mini App уезжает вниз. Telegram отдаёт это на откуп
+    // приложению начиная с Bot API 7.7.
+    app.disableVerticalSwipes?.();
+
     applyInsets(app);
     // Отступы меняются на ходу: поворот экрана, вход и выход из полного
     // экрана. Подписываемся на все три события — какие-то из них есть

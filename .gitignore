@@ -3,6 +3,10 @@ node_modules/
 dist/
 .venv/
 
+# шрифты скачивает scripts/fetch-fonts.mjs на сборке;
+# сам fonts.css в репозитории нужен — в нём запасной путь через Google
+web/public/fonts/*.woff2
+
 # данные и секреты: база проектов, готовые PNG, токен бота
 /data/
 /api/data/

@@ -2,8 +2,6 @@ import { createRoot } from "react-dom/client";
 import StoryCanvas from "./templates/StoryCanvas";
 import { BrandContext } from "./lib/brandContext";
 import { DEFAULT_PROFILE, brandFrom } from "./data/brand";
-// Локальные шрифты: раскомментировать после tools\fetch-fonts.ps1
-// import "./styles/fonts.css";
 import "./styles/story.css";
 
 /**
@@ -53,11 +51,20 @@ function imagesReady() {
   )));
 }
 
-const fonts = document.fonts?.ready || Promise.resolve();
+// Замеряем шрифты и картинки по отдельности: когда рендер занимает
+// секунды, нужно знать, чьи именно это секунды. Воркер читает это
+// после готовности и пишет в лог контейнера.
+const t0 = performance.now();
+window.__DZNOW_TIMING = {};
+const mark = k => () => { window.__DZNOW_TIMING[k] = Math.round(performance.now() - t0); };
+
+const fonts = (document.fonts?.ready || Promise.resolve()).then(mark("fonts"), mark("fonts"));
+
 // Два кадра: первый отдаёт React разметку, во втором в DOM уже есть <img>,
 // которые можно дождаться.
 requestAnimationFrame(() => requestAnimationFrame(() => {
-  Promise.all([fonts, imagesReady()])
+  const images = imagesReady().then(mark("images"), mark("images"));
+  Promise.all([fonts, images])
     .then(() => setTimeout(done, 60))
     .catch(() => setTimeout(done, 60));
 }));

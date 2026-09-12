@@ -31,21 +31,45 @@ _worker: "threading.Thread | None" = None
 _lock = threading.Lock()
 
 
-def _shoot(browser, payload: dict) -> str:
-    page = browser.new_page(viewport=VIEWPORT, device_scale_factor=1)
+def _shoot(context, payload: dict) -> str:
+    page = context.new_page()
     try:
         # Данные кладём в страницу скриптом, а не в адресную строку.
-        # В payload лежат картинки в base64: планировка и логотип. В URL это
-        # мегабайты, и дев-сервер отвечал 431 «request header fields too large»,
-        # а рендер падал с 500.
+        # Картинки теперь ездят ссылками (/files/u_*), но payload всё равно
+        # не для URL: там текст макета, бренд и флаги.
         page.add_init_script(
             "window.__DZNOW_PAYLOAD = " + json.dumps(payload, ensure_ascii=False) + ";"
         )
-        page.goto(RENDER_URL, wait_until="load", timeout=30000)
-        # страница сама сообщает, что шрифты загружены и разметка отрисована
-        page.wait_for_function("window.__DZNOW_READY === true", timeout=15000)
+
+        t0 = time.monotonic()
+        # domcontentloaded, а не load: ждать «load» значило ждать, пока
+        # догрузится всё до последнего шрифта, — а готовность страница и так
+        # объявляет сама, ниже, и объявляет честнее.
+        page.goto(RENDER_URL, wait_until="domcontentloaded", timeout=30000)
+        t_goto = time.monotonic()
+
+        # страница сама сообщает, что шрифты и картинки на месте
+        page.wait_for_function("window.__DZNOW_READY === true", timeout=20000)
+        t_ready = time.monotonic()
+
         name = f"dznow_{int(time.time() * 1000)}.png"
         page.screenshot(path=str(FILES_DIR / name), type="png")
+        t_shot = time.monotonic()
+
+        # Страница отдельно замерила, сколько ждала шрифтов и сколько картинок.
+        try:
+            inner = page.evaluate("window.__DZNOW_TIMING || {}") or {}
+        except Exception:
+            inner = {}
+
+        ms = lambda a, b: int((b - a) * 1000)
+        print(
+            f"[dznow] {name}: страница {ms(t0, t_goto)} мс · "
+            f"готовность {ms(t_goto, t_ready)} мс "
+            f"(шрифты {inner.get('fonts', '?')} мс, картинки {inner.get('images', '?')} мс) · "
+            f"снимок {ms(t_ready, t_shot)} мс",
+            flush=True,
+        )
         return name
     finally:
         page.close()
@@ -69,6 +93,20 @@ def _run_worker() -> None:
             if CHROMIUM_NO_SANDBOX:
                 args += ["--no-sandbox", "--disable-dev-shm-usage"]
             browser = p.chromium.launch(args=args)
+
+            # Один контекст на все рендеры — это не мелочь, а разница в разы.
+            #
+            # browser.new_page() в Playwright заводит НОВЫЙ контекст, а у
+            # каждого контекста свой кеш. То есть на каждый макет Chromium
+            # заново ходил в fonts.googleapis.com за таблицей стилей и в
+            # fonts.gstatic.com за каждым шрифтом — и делал это по сети из
+            # серверной стойки, где до Google далеко.
+            #
+            # С общим контекстом шрифты и картинки скачиваются один раз за
+            # жизнь воркера, дальше берутся из кеша. Страницы по-прежнему
+            # создаются и закрываются на каждый макет, так что состояние
+            # одного рендера не протекает в следующий.
+            context = browser.new_context(viewport=VIEWPORT, device_scale_factor=1)
             try:
                 while True:
                     payload, fut = _jobs.get()
@@ -77,10 +115,11 @@ def _run_worker() -> None:
                     if not fut.set_running_or_notify_cancel():
                         continue
                     try:
-                        fut.set_result(_shoot(browser, payload))
+                        fut.set_result(_shoot(context, payload))
                     except BaseException as exc:  # один плохой макет не роняет воркер
                         fut.set_exception(exc)
             finally:
+                context.close()
                 browser.close()
     except BaseException as exc:
         # Chromium не установлен, нет прав, кончилась память — что угодно.

@@ -5,12 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
   <title>DZNOW</title>
   <link rel="icon" href="/icon.svg">
-  <!-- Шрифты из сети. После tools\fetch-fonts.ps1 эти три строки удалить. -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <!-- TODO: перед продом положить шрифты локально (self-host), иначе рендер-воркер
-       и Mini App зависят от внешней сети и могут подставить fallback. -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Golos+Text:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Montserrat:wght@400;500;600;700;800&family=Onest:wght@400;500;600;700;800&family=Oswald:wght@400;500;600;700&family=PT+Serif:wght@400;700&family=Playfair+Display:wght@600;700;800&family=Rubik:wght@400;500;600;700;800&family=Unbounded:wght@600;700&display=swap">
+  <!-- Шрифты: подменяются на локальные скриптом web/scripts/fetch-fonts.mjs
+       при сборке образа. Пока он не отработал — внутри @import на Google. -->
+  <link rel="stylesheet" href="/fonts/fonts.css">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>

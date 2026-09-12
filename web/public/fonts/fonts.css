@@ -1,0 +1,12 @@
+/* Запасной вариант: шрифты берутся у Google.
+ *
+ * Этот файл перезаписывается на сборке образа скриптом
+ * web/scripts/fetch-fonts.mjs — он скачивает нужные начертания и
+ * подставляет ссылки на свои файлы. Тогда рендер на сервере перестаёт
+ * ходить в интернет за шрифтами, а это в кадре решающая задержка.
+ *
+ * Пока скрипт не отработал (локальная разработка, нет сети на сборке) —
+ * работает то, что было: загрузка с fonts.googleapis.com. Медленнее,
+ * но макет выглядит правильно.
+ */
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Golos+Text:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Montserrat:wght@400;500;600;700&family=Onest:wght@400;500;600;700;800&family=Oswald:wght@500;600;700&family=PT+Serif:wght@400;700&family=Playfair+Display:wght@600;700;800&family=Rubik:wght@400;500;600;700&family=Unbounded:wght@600;700&display=swap");

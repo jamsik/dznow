@@ -48,8 +48,8 @@ export default function ResultPage({ project, format, setFormat, fileUrl, error,
       setBusy(true);
       try {
         const how = await saveImage(fileUrl, name);
-        if (how === "telegram") setSaved("Откройте окно Telegram и подтвердите сохранение");
-        else if (how === "file") setSaved("Файл сохранён в загрузки");
+        if (how === "file") setSaved("Файл сохранён в загрузки");
+        else if (how === "telegram") setSaved("Подтвердите сохранение в окне Telegram");
       } finally { setBusy(false); }
       return;
     }
@@ -60,7 +60,7 @@ export default function ResultPage({ project, format, setFormat, fileUrl, error,
     try {
       const url = await exportNodeToPng(storyRef.current);
       const how = await saveImage(url, name);
-      if (how !== "opened") setSaved("Файл сохранён в загрузки");
+      if (how === "file") setSaved("Файл сохранён в загрузки");
       else onSheet(
         <>
           <img src={url} alt="Готовый макет" />

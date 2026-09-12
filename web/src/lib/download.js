@@ -9,45 +9,83 @@ import { logError, logInfo } from "./log";
  * вместо файла в галерее.
  *
  * Теперь три пути, по убыванию «правильности»:
- *   1. Telegram 8.0+ — downloadFile: нативное окно «Сохранить», картинка
- *      уходит в галерею телефона или в загрузки на компьютере;
- *   2. обычный браузер — скачиваем в blob и отдаём ссылкой с download,
- *      файл падает в загрузки, вкладка не открывается;
- *   3. если и это не вышло (старый вебвью) — открываем картинку, чтобы
- *      её можно было сохранить долгим нажатием.
+ * На телефоне и на компьютере правильный путь разный, поэтому порядок
+ * попыток свой для каждого:
  *
- * Возвращает, каким путём пошло: telegram · file · opened.
+ *   телефон   — системное «Поделиться» с готовым файлом (в меню есть
+ *               «Сохранить изображение», картинка идёт в галерею), затем
+ *               окно Telegram, затем открыть картинку;
+ *   компьютер — тихое скачивание в загрузки без единого окна, затем
+ *               Telegram, затем открыть.
+ *
+ * Одно подтверждение на телефоне неизбежно: ни одна веб-страница не может
+ * писать в галерею молча — так устроены и iOS, и Android. Мы можем только
+ * выбрать, чьё это будет окно: системное меню «Поделиться» короче и
+ * понятнее, чем «Скачать файл?» от Telegram.
+ *
+ * Возвращает, каким путём пошло: shared · file · telegram · opened · cancelled.
  */
+const isPhone = () => /iphone|ipad|ipod|android/i.test(navigator.userAgent);
+
+async function asBlob(absolute) {
+  if (absolute.startsWith("data:")) {
+    const [head, body] = absolute.split(",");
+    const type = (head.match(/data:([^;]+)/) || [])[1] || "image/png";
+    const bin = atob(body);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new Blob([bytes], { type });
+  }
+  const res = await fetch(absolute);
+  if (!res.ok) throw new Error(`файл не отдался: ${res.status}`);
+  return res.blob();
+}
+
 export async function saveImage(url, fileName) {
-  const app = tg();
   const absolute = url.startsWith("http") || url.startsWith("data:")
     ? url
     : new URL(url, location.origin).href;
 
-  // 1. Нативное сохранение Telegram. data: он не принимает — только ссылку.
-  if (app?.downloadFile && !absolute.startsWith("data:")) {
-    try {
-      app.downloadFile({ url: absolute, file_name: fileName });
-      logInfo("сохранение через Telegram", fileName);
-      return "telegram";
-    } catch (err) {
-      logError("Telegram не взял файл, сохраняю сам", err?.message);
-    }
+  const order = isPhone()
+    ? [viaShare, viaTelegram, viaDownload]
+    : [viaDownload, viaTelegram];
+
+  for (const step of order) {
+    const how = await step(absolute, fileName);
+    if (how) return how;
   }
 
-  // 2. Обычное скачивание. Blob нужен именно для того, чтобы у ссылки
-  //    сработал download: на кросс-адресной ссылке браузер его игнорирует
-  //    и просто переходит по ней.
+  window.open(absolute, "_blank", "noopener");
+  return "opened";
+}
+
+/** Системное меню «Поделиться» с файлом. Оттуда — прямо в галерею. */
+async function viaShare(absolute, fileName) {
+  if (!navigator.canShare) return null;
   try {
-    let href = absolute;
-    let revoke = null;
-    if (!absolute.startsWith("data:")) {
-      const res = await fetch(absolute);
-      if (!res.ok) throw new Error(`файл не отдался: ${res.status}`);
-      const blob = await res.blob();
-      href = URL.createObjectURL(blob);
-      revoke = href;
-    }
+    const blob = await asBlob(absolute);
+    const file = new File([blob], fileName, { type: blob.type || "image/png" });
+    if (!navigator.canShare({ files: [file] })) return null;
+    await navigator.share({ files: [file] });
+    logInfo("отдано в системное «Поделиться»", fileName);
+    return "shared";
+  } catch (err) {
+    // Человек закрыл меню — это не ошибка и не повод пробовать дальше.
+    if (err?.name === "AbortError") return "cancelled";
+    logError("системное «Поделиться» не сработало", err?.message);
+    return null;
+  }
+}
+
+/**
+ * Тихое скачивание. Blob нужен именно для того, чтобы у ссылки сработал
+ * download: на кросс-адресной ссылке браузер его игнорирует и просто
+ * переходит по ней, открывая картинку вкладкой.
+ */
+async function viaDownload(absolute, fileName) {
+  try {
+    const blob = await asBlob(absolute);
+    const href = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = href;
     a.download = fileName;
@@ -55,14 +93,25 @@ export async function saveImage(url, fileName) {
     document.body.appendChild(a);
     a.click();
     a.remove();
-    if (revoke) setTimeout(() => URL.revokeObjectURL(revoke), 60000);
+    setTimeout(() => URL.revokeObjectURL(href), 60000);
     logInfo("файл сохранён", fileName);
     return "file";
   } catch (err) {
     logError("скачать файл не удалось", err?.message);
+    return null;
   }
+}
 
-  // 3. Последнее средство.
-  window.open(absolute, "_blank", "noopener");
-  return "opened";
+/** Средство Telegram. Своё окно «Скачать файл?» — обойти его нельзя. */
+function viaTelegram(absolute, fileName) {
+  const app = tg();
+  if (!app?.downloadFile || absolute.startsWith("data:")) return null;
+  try {
+    app.downloadFile({ url: absolute, file_name: fileName });
+    logInfo("сохранение через Telegram", fileName);
+    return "telegram";
+  } catch (err) {
+    logError("Telegram не взял файл", err?.message);
+    return null;
+  }
 }

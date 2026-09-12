@@ -4,8 +4,6 @@ import App from "./App";
 import ErrorScreen from "./components/ErrorScreen";
 import TelegramGate from "./components/TelegramGate";
 import { installLogHooks } from "./lib/log";
-// Локальные шрифты: раскомментировать после tools\fetch-fonts.ps1
-// import "./styles/fonts.css";
 import "./styles/app.css";
 import "./styles/story.css";
 
