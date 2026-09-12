@@ -4,7 +4,8 @@ dist/
 .venv/
 
 # данные и секреты: база проектов, готовые PNG, токен бота
-data/
+/data/
+/api/data/
 .env
 
 __pycache__/
