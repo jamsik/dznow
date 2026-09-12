@@ -8,12 +8,14 @@ import RenderPage from "./pages/RenderPage";
 import ResultPage from "./pages/ResultPage";
 import ProjectsPage from "./pages/ProjectsPage";
 import ProfilePage from "./pages/ProfilePage";
-import { api } from "./lib/api";
-import { brandFrom, initials } from "./data/brand";
+import OnboardingPage from "./pages/OnboardingPage";
+import { api, isMock } from "./lib/api";
+import { brandFrom } from "./data/brand";
 import { loadProfile, saveProfile } from "./lib/profile";
 import { BrandContext } from "./lib/brandContext";
 import { BASE_DRAFT, SCENARIOS } from "./data/catalog";
 import { initTelegram, telegramUser, useTelegramBack } from "./lib/telegram";
+import { logError, logInfo } from "./lib/log";
 
 const FULL_SCREEN = ["editor", "render", "result"];
 
@@ -27,31 +29,22 @@ export default function App() {
   const [format, setFormat] = useState("png");
   const [lastProject, setLastProject] = useState(null);
   const [fileUrl, setFileUrl] = useState(null);
+  const [renderError, setRenderError] = useState(null);
   const [sheet, setSheet] = useState(null);
+
+  const tgUser = useMemo(telegramUser, []);
 
   useEffect(() => {
     initTelegram();
-    // Имя из Telegram подставляем только в пустой профиль, чтобы не затирать
-    // то, что человек ввёл руками.
-    const tgUser = telegramUser();
-    if (tgUser) {
-      setProfile(p => {
-        if (p.firstName || p.lastName) return p;
-        const [first, ...rest] = tgUser.name.split(" ");
-        return { ...p, firstName: first || "", lastName: rest.join(" ") };
-      });
-    }
-    api.listProjects().then(setProjects).catch(() => {});
-  }, []);
+    logInfo("старт", `режим: ${isMock ? "мок" : "сервер"}, telegram: ${tgUser ? "да" : "нет"}`);
+    api.listProjects().then(setProjects)
+      .catch(err => logError("не удалось загрузить список проектов", err?.message));
+  }, [tgUser]);
 
   // профиль живёт на устройстве и сохраняется при каждом изменении
   useEffect(() => { saveProfile(profile); }, [profile]);
 
   const brand = useMemo(() => brandFrom(profile), [profile]);
-  const avatarUser = useMemo(
-    () => ({ initials: initials(profile) }),
-    [profile]
-  );
 
   const go = useCallback(r => { setRoute(r); window.scrollTo(0, 0); }, []);
   const backHome = useCallback(() => go("home"), [go]);
@@ -80,8 +73,11 @@ export default function App() {
     setLastProject(project);
     await api.saveProject(project).catch(() => {});
     api.listProjects().then(setProjects).catch(() => {});
-    const res = await api.render({ data: project.data, layout: project.layout, format, brand })
-      .catch(() => null);
+    // Ошибку не глотаем: раньше здесь стоял .catch(() => null), сервер молча
+    // отваливался, экран сборки досиживал до таймаута и уходил дальше — со
+    // стороны это выглядело как «приложение зависло». Теперь причина
+    // доезжает до экрана результата и до журнала.
+    const res = await api.render({ data: project.data, layout: project.layout, format, brand });
     return res?.url || null;
   }, [draft, scenario, format, brand]);
 
@@ -106,14 +102,26 @@ export default function App() {
 
   const chrome = !FULL_SCREEN.includes(route);
 
+  // Первый вход: без имени и телефона первый же макет выйдет подписанным
+  // пустотой, поэтому спрашиваем их до того, как человек что-то откроет.
+  if (!profile.onboarded) {
+    return (
+      <OnboardingPage
+        profile={profile}
+        tgUser={tgUser}
+        onDone={fields => setProfile(p => ({ ...p, ...fields }))}
+      />
+    );
+  }
+
   return (
     <BrandContext.Provider value={brand}>
       {route === "render" ? (
         <RenderPage draft={draft} layout={scenario.layout} work={renderWork}
-                    onDone={url => { setFileUrl(url); go("result"); }} />
+                    onDone={(url, err) => { setFileUrl(url); setRenderError(err || null); go("result"); }} />
       ) : (
         <div className="screen">
-          {chrome && <AppHeader route={route} go={go} user={avatarUser} />}
+          {chrome && <AppHeader route={route} go={go} />}
 
           {route === "home" && (
             <HomePage category={category} setCategory={setCategory} projects={projects} go={go}
@@ -125,13 +133,14 @@ export default function App() {
 
           {route === "editor" && (
             <EditorPage scenario={scenario} draft={draft} setDraft={setDraft} agency={brand.agency}
-                        onCreate={() => { setFileUrl(null); go("render"); }}
+                        onCreate={() => { setFileUrl(null); setRenderError(null); go("render"); }}
                         onBack={backHome} onMenu={editorMenu}
                         onProfile={() => go("profile")} />
           )}
 
           {route === "result" && lastProject && (
             <ResultPage project={lastProject} format={format} setFormat={setFormat} fileUrl={fileUrl}
+                        error={renderError}
                         onEdit={() => go("editor")}
                         onAgain={() => { setDraft({ ...BASE_DRAFT }); go("home"); }}
                         onSheet={setSheet} />

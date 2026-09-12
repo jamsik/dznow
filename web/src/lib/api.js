@@ -1,4 +1,5 @@
 import { initDataRaw } from "./telegram";
+import { logError, logInfo } from "./log";
 import { BASE_DRAFT } from "../data/catalog";
 
 /**
@@ -32,16 +33,51 @@ function seed() {
   ];
 }
 
+/**
+ * Один запрос к серверу. Всё проходит здесь, поэтому здесь же и журнал.
+ *
+ * Раньше ошибка выглядела как «/render: 500» — по такой строке нельзя понять
+ * ни что случилось, ни на чьей стороне. Теперь берём detail из ответа FastAPI
+ * и кладём в текст ошибки: именно он попадает человеку на экран.
+ */
 async function call(path, options = {}) {
-  const res = await fetch(BASE + path, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      "X-Telegram-Init-Data": initDataRaw(),
-      ...(options.headers || {})
+  const started = Date.now();
+  let res;
+  try {
+    res = await fetch(BASE + path, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        "X-Telegram-Init-Data": initDataRaw(),
+        ...(options.headers || {})
+      }
+    });
+  } catch (err) {
+    // сюда попадает обрыв сети и блокировка запроса, а не ответ сервера
+    logError(`${path}: сеть недоступна`, err?.message);
+    throw new Error("Сервер недоступен: " + (err?.message || "нет соединения"));
+  }
+
+  const ms = Date.now() - started;
+
+  if (!res.ok) {
+    let detail = "";
+    try {
+      const body = await res.clone().json();
+      detail = body?.detail || "";
+    } catch {
+      try { detail = (await res.text()).slice(0, 200); } catch {}
     }
-  });
-  if (!res.ok) throw new Error(`${path}: ${res.status}`);
+    logError(`${path}: ${res.status} за ${ms} мс`, detail);
+    const human = res.status === 401
+      ? "Telegram не подтвердил вход. Откройте приложение заново из бота."
+      : detail || `Сервер ответил ${res.status}`;
+    const err = new Error(human);
+    err.status = res.status;
+    throw err;
+  }
+
+  logInfo(`${path}: 200 за ${ms} мс`);
   return res.json();
 }
 

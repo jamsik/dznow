@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import StoryPreview from "../components/StoryPreview";
 import Icon from "../components/icons";
+import { logError } from "../lib/log";
 
 const STEPS = ["Подготавливаем изображения", "Добавляем данные", "Собираем анимацию", "Готовим файл"];
 const SLOW_AFTER = 8000;   // когда честно сказать, что сервер думает дольше обычного
@@ -24,6 +25,9 @@ export default function RenderPage({ draft, layout, work, onDone }) {
   // и в списке зависимостей эффекта постоянно сбрасывал бы финальный таймер.
   const doneRef = useRef(onDone);
   doneRef.current = onDone;
+  // error в замыкании финального таймера был бы старым: ref всегда свежий
+  const errorRef = useRef(null);
+  errorRef.current = error;
 
   useEffect(() => {
     if (started.current) return;
@@ -35,8 +39,9 @@ export default function RenderPage({ draft, layout, work, onDone }) {
     Promise.resolve(work?.())
       .then(url => { result.current = url; })
       .catch(err => {
-        console.error("[DZNOW] рендер не удался:", err);
-        setError(err?.message || String(err));
+        const text = err?.message || String(err);
+        logError("рендер не удался", text);
+        setError(text);
       })
       .finally(() => {
         clearTimeout(slowTimer);
@@ -53,7 +58,7 @@ export default function RenderPage({ draft, layout, work, onDone }) {
 
   useEffect(() => {
     if (step < STEPS.length || !ready) return;
-    const t = setTimeout(() => doneRef.current(result.current), 380);
+    const t = setTimeout(() => doneRef.current(result.current, errorRef.current), 380);
     return () => clearTimeout(t);
   }, [step, ready]);
 
@@ -68,8 +73,8 @@ export default function RenderPage({ draft, layout, work, onDone }) {
 
       <div style={{ textAlign: "center" }}>
         <div style={{ fontSize: 21, fontWeight: 700, letterSpacing: "-.02em" }}>Собираем ваш дизайн</div>
-        <div className="sub" style={{ fontSize: 13.5 }}>
-          {error ? "Сервер не ответил — соберём картинку на устройстве"
+        <div className={"sub" + (error ? " bad" : "")} style={{ fontSize: 13.5 }}>
+          {error ? error
                  : slow ? "Сервер думает дольше обычного, ещё немного"
                  : "Обычно занимает несколько секунд"}
         </div>

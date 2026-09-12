@@ -87,17 +87,21 @@ button{border:none;background:none;padding:0;cursor:pointer;color:inherit}
 .wordmark.lg{font-size:30px}
 
 /* ---------- top bar ---------- */
+/* Шапка. Логотип по центру: слева и справа в полноэкранном режиме стоят
+   кнопки самого Telegram («Закрыть», «свернуть», «…»), и любой элемент,
+   прижатый к краю, оказывался ровно под ними.
+   --tg-top приходит из lib/telegram.js (safeAreaInset + contentSafeAreaInset);
+   вне Telegram переменной нет и работает env() — вырез экрана в браузере. */
 .appbar{
   position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 88%,transparent);
   backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
-  display:flex;align-items:center;gap:12px;padding:14px 0 10px;
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  padding:calc(var(--tg-top, env(safe-area-inset-top, 0px)) + 14px) 0 10px;
+  min-height:calc(var(--tg-top, 0px) + 56px);
 }
-.avatar{
-  width:34px;height:34px;border-radius:50%;flex:none;margin-left:auto;
-  background:var(--surface-2);display:grid;place-items:center;
-  font-size:12.5px;font-weight:700;letter-spacing:.02em;color:var(--text-2);
-}
-.avatar.on{background:var(--accent);color:var(--on-accent)}
+/* На широком экране меню уходит влево, логотип остаётся по центру полосы.
+   Скрыт на телефоне ниже по файлу — там работает нижняя навигация. */
+.appbar .desknav{position:absolute;left:0}
 .iconbtn{
   width:36px;height:36px;border-radius:50%;display:grid;place-items:center;flex:none;
   color:var(--text-2);
@@ -195,6 +199,7 @@ button{border:none;background:none;padding:0;cursor:pointer;color:inherit}
 /* ---------- bottom nav ---------- */
 .bottomnav{
   position:fixed;left:0;right:0;bottom:0;z-index:40;
+  padding-bottom:var(--tg-bottom, 0px);
   background:color-mix(in srgb,var(--bg) 92%,transparent);
   backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
   border-top:1px solid var(--line);
@@ -552,6 +557,8 @@ input[type=file]{display:none}
 .fieldset.grid2 .row + .row{border-top:none}
 .fieldset.grid2 .row:nth-child(odd){border-right:1px solid var(--line)}
 .fieldset.grid2 .row:nth-child(n+3){border-top:1px solid var(--line)}
+/* нечётное число пунктов: у последнего справа пусто, линия висела бы в воздухе */
+.fieldset.grid2 .row:last-child:nth-child(odd){border-right:none}
 .fieldset.grid2 .row.toggle .t{font-size:14px}
 @media (max-width:359px){
   .fieldset.grid2{grid-template-columns:1fr}
@@ -583,3 +590,56 @@ input[type=file]{display:none}
 
 /* Ручной цвет подписей видно по рамке — иначе не отличить от автоподбора. */
 .pal-pick[data-hand="1"]{box-shadow:var(--shadow-1),0 0 0 1.5px var(--accent)}
+
+/* ---------- первый вход ---------- */
+/* Отдельный экран без шапки и нижней навигации: пока имени нет, идти
+   некуда — любой макет вышел бы подписанным пустотой. */
+.onb{
+  max-width:440px;margin:0 auto;
+  padding:calc(var(--tg-top, env(safe-area-inset-top, 0px)) + 40px) 18px
+          calc(var(--tg-bottom, 0px) + 40px);
+}
+.onb-logo{display:flex;justify-content:center;margin-bottom:30px}
+.onb h1{font-size:27px;line-height:1.12;font-weight:700;letter-spacing:-.03em;margin:0}
+.onb-lead{color:var(--muted);font-size:14.5px;line-height:1.5;margin:10px 0 20px}
+.onb-err{
+  font-size:13px;color:#C0392B;margin:8px 4px 0;font-weight:600;
+}
+:root[data-theme="dark"] .onb-err,
+:root:not([data-theme="light"]) .onb-err{color:#FF8A80}
+.onb-go{width:100%;margin-top:22px;justify-content:center}
+.onb-go[aria-disabled="true"]{opacity:.5}
+
+/* ---------- предупреждение на экране результата ---------- */
+.warnbar{
+  background:var(--surface-2);border-radius:var(--r-s);padding:12px 14px;
+  font-size:13px;line-height:1.5;color:var(--text-2);margin-top:14px;
+}
+.warnbar b{color:var(--text)}
+.sub.bad{color:#C0392B}
+:root[data-theme="dark"] .sub.bad,
+:root:not([data-theme="light"]) .sub.bad{color:#FF8A80}
+
+/* ---------- журнал ---------- */
+.badge-err{
+  display:inline-block;margin-left:7px;min-width:19px;padding:0 6px;
+  border-radius:999px;background:#C0392B;color:#fff;
+  font-size:11px;font-weight:700;line-height:19px;text-align:center;vertical-align:1px;
+}
+.journal{
+  margin-top:10px;background:var(--surface);border-radius:var(--r-s);
+  box-shadow:var(--shadow-1);max-height:340px;overflow:auto;
+  font-family:var(--mono);font-size:11.5px;line-height:1.5;
+}
+.j-empty{padding:14px;color:var(--muted);font-family:var(--ui);font-size:13px}
+.j-row{display:flex;gap:9px;padding:7px 12px;align-items:flex-start}
+.j-row + .j-row{border-top:1px solid var(--line)}
+.j-t{color:var(--muted);flex:none}
+.j-m{min-width:0;word-break:break-word}
+.j-m i{display:block;color:var(--muted);font-style:normal;margin-top:2px}
+.j-error .j-m{color:#C0392B}
+.j-warn .j-m{color:#B26A00}
+:root[data-theme="dark"] .j-error .j-m,
+:root:not([data-theme="light"]) .j-error .j-m{color:#FF8A80}
+:root[data-theme="dark"] .j-warn .j-m,
+:root:not([data-theme="light"]) .j-warn .j-m{color:#FFC46B}

@@ -3,14 +3,19 @@ import StoryPreview from "../components/StoryPreview";
 import Icon, { PlayGlyph } from "../components/icons";
 import { exportNodeToPng, downloadDataUrl } from "../lib/exportPng";
 import { haptic } from "../lib/telegram";
+import { logError } from "../lib/log";
 
-export default function ResultPage({ project, format, setFormat, fileUrl, onEdit, onAgain, onSheet }) {
+export default function ResultPage({ project, format, setFormat, fileUrl, error, onEdit, onAgain, onSheet }) {
   const [playing, setPlaying] = useState(false);
   const [busy, setBusy] = useState(false);
   const storyRef = useRef(null);
   const timer = useRef(0);
 
   const meta = format === "mp4" ? "MP4 · 1080×1920 · 8 сек" : "PNG · 1080×1920";
+
+  // Сервер не отдал файл — значит, «Скачать» соберёт картинку прямо в браузере.
+  // Это запасной путь: html2canvas рисует не всё и иногда съезжает, поэтому
+  // о подмене надо сказать, а не молча выдать кривой файл за нормальный.
 
   const play = () => {
     setPlaying(false);
@@ -46,6 +51,7 @@ export default function ResultPage({ project, format, setFormat, fileUrl, onEdit
         </>
       );
     } catch (e) {
+      logError("сборка картинки в браузере не удалась", e?.message);
       onSheet(<><p>Не удалось собрать картинку: {e.message}</p>
                 <button className="btn ghost si" onClick={() => onSheet(null)}>Закрыть</button></>);
     } finally { setBusy(false); }
@@ -74,6 +80,15 @@ export default function ResultPage({ project, format, setFormat, fileUrl, onEdit
         <h1>Готово</h1>
         <p>{meta}</p>
       </div>
+
+      {error && !fileUrl && (
+        <div className="warnbar">
+          <b>Сервер файл не собрал.</b> {error}
+          <br />
+          «Скачать» соберёт картинку прямо в браузере — получится тот же макет,
+          но качество ниже и мелкие детали могут съехать.
+        </div>
+      )}
 
       <div className="fmtpick">
         <button className="fmt-o" aria-pressed={format === "png"} onClick={() => setFormat("png")}>Картинка</button>
