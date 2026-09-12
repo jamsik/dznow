@@ -1,6 +1,9 @@
 import asyncio
+import hashlib
+import mimetypes
+import time
 
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -100,6 +103,7 @@ async def render(req: RenderRequest, x_telegram_init_data: str = Header("")):
             "author": {"name": user["name"], "tel": user.get("tel") or "", "contacts": ""},
         },
     }
+    started = time.monotonic()
     try:
         name = await render_png(payload)
     except asyncio.TimeoutError:
@@ -108,7 +112,48 @@ async def render(req: RenderRequest, x_telegram_init_data: str = Header("")):
         # Самое частое: не установлен Chromium (python -m playwright install chromium)
         # или RENDER_URL не отвечает, потому что не запущен фронтенд.
         raise HTTPException(status_code=500, detail=f"Рендер не удался: {exc}") from exc
-    return {"url": f"/files/{name}", "format": "png"}
+    ms = int((time.monotonic() - started) * 1000)
+    print(f"[dznow] рендер {name} за {ms} мс", flush=True)
+    return {"url": f"/files/{name}", "format": "png", "ms": ms}
+
+
+# Что принимаем на загрузку. Список закрытый: сюда попадает то, что потом
+# открывает Chromium в рендере, и «любой файл» тут не нужен.
+UPLOAD_TYPES = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp"}
+MAX_UPLOAD = 8 * 1024 * 1024
+
+
+@app.post("/api/upload")
+async def upload(request: Request, x_telegram_init_data: str = Header("")):
+    """
+    Картинка кладётся на сервер один раз и дальше живёт ссылкой.
+
+    Раньше планировка и фон ехали в теле каждого запроса строкой base64:
+    в /api/projects, потом в /api/render, потом той же строкой впрыскивались
+    в страницу рендера. Пара картинок превращалась в мегабайты, которые
+    трижды гонялись по сети и по CDP, — отсюда и «создание длится вечно».
+
+    Имя файла — хеш содержимого: та же картинка не сохраняется дважды,
+    а повторный рендер того же макета вообще ничего не загружает.
+    """
+    current_user(x_telegram_init_data)
+
+    ctype = (request.headers.get("content-type") or "").split(";")[0].strip()
+    ext = UPLOAD_TYPES.get(ctype)
+    if not ext:
+        raise HTTPException(status_code=415, detail=f"Такие картинки не принимаем: {ctype or 'тип не указан'}")
+
+    blob = await request.body()
+    if not blob:
+        raise HTTPException(status_code=400, detail="Пустой файл")
+    if len(blob) > MAX_UPLOAD:
+        raise HTTPException(status_code=413, detail="Картинка больше 8 МБ")
+
+    name = "u_" + hashlib.sha1(blob).hexdigest()[:20] + ext
+    path = FILES_DIR / name
+    if not path.exists():
+        path.write_bytes(blob)
+    return {"url": f"/files/{name}", "bytes": len(blob)}
 
 
 @app.get("/files/{name}")
@@ -116,7 +161,12 @@ def file(name: str):
     path = (FILES_DIR / name).resolve()
     if not str(path).startswith(str(FILES_DIR)) or not path.exists():
         raise HTTPException(status_code=404, detail="Файл не найден")
-    return FileResponse(path, media_type="image/png")
+    media = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
+    # Имя файла — хеш содержимого, значит содержимое не меняется никогда:
+    # можно кешировать надолго. Это экономит загрузку картинки в Chromium
+    # при каждом следующем рендере того же макета.
+    headers = {"Cache-Control": "public, max-age=31536000, immutable"} if name.startswith("u_") else {}
+    return FileResponse(path, media_type=media, headers=headers)
 
 
 # Собранный фронт раздаётся этим же процессом — и приложение, и render.html,

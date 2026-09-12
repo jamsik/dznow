@@ -35,5 +35,32 @@ createRoot(document.getElementById("render-root")).render(
 );
 
 const done = () => { window.__DZNOW_READY = true; };
-if (document.fonts?.ready) document.fonts.ready.then(() => requestAnimationFrame(() => setTimeout(done, 60)));
-else setTimeout(done, 400);
+
+/**
+ * Ждём картинки, а не только шрифты.
+ *
+ * Пока планировка и фон приезжали строкой base64, они успевали
+ * декодироваться сами собой. Теперь это ссылки на /files/... — их надо
+ * честно дождаться, иначе воркер снимет кадр с пустой рамкой вместо
+ * чертежа и отдаст такой файл как готовый.
+ */
+function imagesReady() {
+  const imgs = Array.from(document.images);
+  return Promise.all(imgs.map(img => (
+    img.complete && img.naturalWidth
+      ? null
+      : new Promise(r => { img.onload = r; img.onerror = r; })
+  )));
+}
+
+const fonts = document.fonts?.ready || Promise.resolve();
+// Два кадра: первый отдаёт React разметку, во втором в DOM уже есть <img>,
+// которые можно дождаться.
+requestAnimationFrame(() => requestAnimationFrame(() => {
+  Promise.all([fonts, imagesReady()])
+    .then(() => setTimeout(done, 60))
+    .catch(() => setTimeout(done, 60));
+}));
+
+// Страховка: что-то не догрузилось — лучше снять кадр, чем висеть до таймаута.
+setTimeout(done, 12000);

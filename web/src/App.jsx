@@ -10,6 +10,7 @@ import ProjectsPage from "./pages/ProjectsPage";
 import ProfilePage from "./pages/ProfilePage";
 import OnboardingPage from "./pages/OnboardingPage";
 import { api, isMock } from "./lib/api";
+import { materialize } from "./lib/upload";
 import { brandFrom } from "./data/brand";
 import { loadProfile, saveProfile } from "./lib/profile";
 import { BrandContext } from "./lib/brandContext";
@@ -60,15 +61,20 @@ export default function App() {
 
   /** Работа экрана сборки: сохранить проект и попросить сервер отрендерить файл. */
   const renderWork = useMemo(() => async () => {
+    // Картинки уезжают на сервер один раз и дальше живут ссылками.
+    // До этого момента они лежат в браузере как data:URL — редактирование
+    // не трогает сеть вовсе, а в тело запроса вместо мегабайтов попадает
+    // строчка вида /files/u_abc123.webp.
+    // planSource — исходник до обработки, нужен только редактору.
+    const data = await materialize({ ...draft, planSource: null });
+
     const project = {
       id: "p" + Date.now(),
       title: draft.complex,
       scenario: scenario.id,
       layout: scenario.layout,
       at: Date.now(),
-      // planSource — исходник до обработки, нужен только редактору;
-      // в хранилище и на сервер уходит уже готовая картинка
-      data: { ...draft, planSource: null }
+      data
     };
     setLastProject(project);
     await api.saveProject(project).catch(() => {});
@@ -78,6 +84,9 @@ export default function App() {
     // стороны это выглядело как «приложение зависло». Теперь причина
     // доезжает до экрана результата и до журнала.
     const res = await api.render({ data: project.data, layout: project.layout, format, brand });
+    // Черновик тоже переводим на ссылки: иначе при «Изменить → Создать»
+    // те же картинки загрузились бы ещё раз.
+    setDraft(d => ({ ...d, planImage: data.planImage, bgImage: data.bgImage }));
     return res?.url || null;
   }, [draft, scenario, format, brand]);
 

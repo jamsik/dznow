@@ -13,8 +13,26 @@
  * результата не будет — для них в загрузчике есть режим «как есть».
  */
 
+import { logInfo } from "./log";
+
 const MAX_SIDE = 1200;   // больше в сторис всё равно не видно, а вес растёт
 const NOISE = 0.10;      // ниже этого уровня считаем, что это фон, а не линия
+
+/**
+ * Кодируем в WebP: чертёж с прозрачностью в PNG весил по 1–3 МБ, и именно
+ * эти мегабайты потом ехали на сервер и в браузер Chromium. WebP с альфой
+ * даёт ту же картинку в 5–10 раз легче.
+ *
+ * Старые вебвью WebP из canvas не умеют — там toDataURL молча возвращает
+ * PNG. Проверяем префикс и не притворяемся, что всё получилось.
+ */
+function encode(canvas, alpha) {
+  const webp = canvas.toDataURL("image/webp", alpha ? 0.92 : 0.86);
+  if (webp.startsWith("data:image/webp")) return webp;
+  return alpha ? canvas.toDataURL("image/png") : canvas.toDataURL("image/jpeg", 0.88);
+}
+
+const kb = url => Math.round(url.length * 0.75 / 1024);
 
 /**
  * Уменьшает картинку до разумного размера, ничего не перекрашивая.
@@ -29,10 +47,13 @@ export function fitImage(dataUrl) {
       if (scale === 1 && dataUrl.length < 600 * 1024) { resolve(dataUrl); return; }
       const w = Math.max(1, Math.round(img.width * scale));
       const h = Math.max(1, Math.round(img.height * scale));
+      const started = Date.now();
       const c = document.createElement("canvas");
       c.width = w; c.height = h;
       c.getContext("2d").drawImage(img, 0, 0, w, h);
-      resolve(c.toDataURL("image/jpeg", 0.88));
+      const out = encode(c, false);
+      logInfo(`картинка ужата: ${img.width}×${img.height} → ${w}×${h}, ${kb(out)} КБ за ${Date.now() - started} мс`);
+      resolve(out);
     };
     img.onerror = () => reject(new Error("не удалось прочитать изображение"));
     img.src = dataUrl;
@@ -43,7 +64,12 @@ export function cleanPlan(dataUrl, color) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
-      try { resolve(process(img, color)); } catch (e) { reject(e); }
+      const started = Date.now();
+      try {
+        const out = process(img, color);
+        logInfo(`чертёж обработан: ${img.width}×${img.height} → ${kb(out)} КБ за ${Date.now() - started} мс`);
+        resolve(out);
+      } catch (e) { reject(e); }
     };
     img.onerror = () => reject(new Error("не удалось прочитать изображение"));
     img.src = dataUrl;
@@ -101,7 +127,7 @@ function process(img, color) {
   }
   ctx.putImageData(data, 0, 0);
 
-  if (maxX < 0) return canvas.toDataURL("image/png");   // пустая картинка — отдаём как есть
+  if (maxX < 0) return encode(canvas, true);   // пустая картинка — отдаём как есть
 
   // Обрезка полей с небольшим воздухом по краям.
   const pad = Math.round(Math.max(w, h) * 0.01);
@@ -113,7 +139,7 @@ function process(img, color) {
   const out = document.createElement("canvas");
   out.width = cw; out.height = ch;
   out.getContext("2d").drawImage(canvas, cx, cy, cw, ch, 0, 0, cw, ch);
-  return out.toDataURL("image/png");
+  return encode(out, true);
 }
 
 function percentile(hist, total, p) {

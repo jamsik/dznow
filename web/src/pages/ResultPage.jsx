@@ -1,13 +1,15 @@
 import { useRef, useState } from "react";
 import StoryPreview from "../components/StoryPreview";
 import Icon, { PlayGlyph } from "../components/icons";
-import { exportNodeToPng, downloadDataUrl } from "../lib/exportPng";
+import { exportNodeToPng } from "../lib/exportPng";
+import { saveImage } from "../lib/download";
 import { haptic } from "../lib/telegram";
 import { logError } from "../lib/log";
 
 export default function ResultPage({ project, format, setFormat, fileUrl, error, onEdit, onAgain, onSheet }) {
   const [playing, setPlaying] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [saved, setSaved] = useState(null);
   const storyRef = useRef(null);
   const timer = useRef(0);
 
@@ -38,15 +40,31 @@ export default function ResultPage({ project, format, setFormat, fileUrl, error,
       );
       return;
     }
-    if (fileUrl) { window.open(fileUrl, "_blank"); return; }
+    const name = `dznow_${project.data.complex || "story"}_${Date.now()}.png`
+      .replace(/[\\/:*?"<>|«»]/g, "");
+
+    // Готовый файл с сервера — сохраняем его, ничего не пересобирая.
+    if (fileUrl) {
+      setBusy(true);
+      try {
+        const how = await saveImage(fileUrl, name);
+        if (how === "telegram") setSaved("Откройте окно Telegram и подтвердите сохранение");
+        else if (how === "file") setSaved("Файл сохранён в загрузки");
+      } finally { setBusy(false); }
+      return;
+    }
+
+    // Сервер файл не собрал — рисуем в браузере. Путь запасной: html2canvas
+    // понимает не весь CSS и на больших картинках работает долго.
     setBusy(true);
     try {
       const url = await exportNodeToPng(storyRef.current);
-      downloadDataUrl(url, `dznow_${Date.now()}.png`);
-      onSheet(
+      const how = await saveImage(url, name);
+      if (how !== "opened") setSaved("Файл сохранён в загрузки");
+      else onSheet(
         <>
           <img src={url} alt="Готовый макет" />
-          <p>Если скачивание не началось само — сохраните картинку отсюда.</p>
+          <p>Сохраните картинку долгим нажатием.</p>
           <button className="btn ghost si" onClick={() => onSheet(null)}>Закрыть</button>
         </>
       );
@@ -103,8 +121,9 @@ export default function ResultPage({ project, format, setFormat, fileUrl, error,
 
       <div className="result-actions">
         <button className="btn primary" onClick={download} disabled={busy}>
-          <Icon name="download" /> {busy ? "Готовлю файл…" : "Скачать"}
+          <Icon name="download" /> {busy ? "Сохраняю…" : "Скачать"}
         </button>
+        {saved && <div className="savednote">{saved}</div>}
         <div className="pair">
           <button className="btn line" onClick={share}><Icon name="share" /> Поделиться</button>
           <button className="btn line" onClick={onEdit}>Изменить</button>

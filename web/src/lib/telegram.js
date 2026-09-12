@@ -18,6 +18,15 @@ function applyInsets(app) {
   const sa = app.safeAreaInset || {};
   const ca = app.contentSafeAreaInset || {};
   const px = v => (Number(v) || 0) + "px";
+  // Раздельно, а не одной суммой: у них разный смысл.
+  //   --tg-safe-top    — вырез экрана, под него нельзя ничего класть;
+  //   --tg-content-top — полоса, где Telegram рисует свои кнопки. Кнопки
+  //                      стоят по краям, середина свободна, и логотип
+  //                      приложения встаёт как раз туда — иначе сверху
+  //                      оставалась пустая полоса в палец высотой.
+  //   --tg-top         — сумма, для экранов, которым надо уйти ниже всего.
+  root.style.setProperty("--tg-safe-top", px(sa.top));
+  root.style.setProperty("--tg-content-top", px(ca.top));
   root.style.setProperty("--tg-top", px((sa.top || 0) + (ca.top || 0)));
   root.style.setProperty("--tg-bottom", px((sa.bottom || 0) + (ca.bottom || 0)));
   root.style.setProperty("--tg-left", px(sa.left));
