@@ -7,11 +7,39 @@ export const money = v => group(v) + " ₽";
 export const short = v =>
   v >= 1e6 ? (v / 1e6).toFixed(v % 1e6 === 0 ? 0 : 2).replace(".", ",") + " млн ₽" : money(v);
 
+/**
+ * Первый взнос — и суммой, и процентом, из чего бы его ни задали.
+ *
+ * Риэлтор думает то так, то этак: у одного банка условие «20,1% и ни
+ * копейкой меньше», у клиента на руках «полтора миллиона». Поэтому
+ * ведущим может быть любое из двух, а второе считается.
+ *
+ * Взнос больше цены — бессмыслица, поэтому подрезаем: иначе кредит уходил
+ * в минус и платёж выходил отрицательным.
+ */
+export function downPayment(d = {}) {
+  const price = Math.max(0, Number(d.price) || 0);
+  const sum = d.downMode === "sum"
+    ? Math.min(Math.max(0, Number(d.downSum) || 0), price)
+    : price * Math.min(100, Math.max(0, Number(d.down) || 0)) / 100;
+  return { sum, percent: price > 0 ? (sum / price) * 100 : 0 };
+}
+
+/** Как взнос подписан в макете: процентом, суммой или и тем и другим. */
+export function downLabel(d = {}) {
+  const { sum, percent } = downPayment(d);
+  const p = num(percent) + "%";
+  if (d.downShow === "sum") return short(sum);
+  if (d.downShow === "both") return `${short(sum)} · ${p}`;
+  return p;
+}
+
 /** Аннуитетный платёж — то, ради чего риэлтор обычно лезет в калькулятор. */
-export function annuity({ price, down, rate, term }) {
-  const loan = price * (1 - down / 100);
-  const i = rate / 100 / 12;
-  const n = term * 12;
+export function annuity(d = {}) {
+  const { rate, term } = d;
+  const loan = (Math.max(0, Number(d.price) || 0)) - downPayment(d).sum;
+  const i = (Number(rate) || 0) / 100 / 12;
+  const n = (Number(term) || 0) * 12;
   if (loan <= 0 || n <= 0) return 0;
   return i <= 0 ? loan / n : (loan * i) / (1 - Math.pow(1 + i, -n));
 }

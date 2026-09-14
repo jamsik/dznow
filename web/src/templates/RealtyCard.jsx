@@ -1,7 +1,7 @@
 import FactIcon from "./factIcons";
 import CountValue from "./CountValue";
 import { StoryHead, StoryFoot, StoryPlan } from "./BrandBits";
-import { annuity, money, num, short } from "../lib/format";
+import { annuity, downLabel, money, num, short } from "../lib/format";
 
 /** realty.flat.v1 · макет «Карточка объекта» */
 export default function RealtyCard({ d, show, agency, author, playing }) {
@@ -53,7 +53,7 @@ export default function RealtyCard({ d, show, agency, author, playing }) {
           <CountValue className="amt" value={pay} format={money} playing={playing} delay={1.3} />
         </div>
         <div className="terms">
-          взнос {num(d.down)}% · {num(d.rate)}%<br />на {num(d.term)} лет
+          взнос {downLabel(d)} · {num(d.rate)}%<br />на {num(d.term)} лет
         </div>
       </div>
 

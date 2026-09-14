@@ -655,3 +655,21 @@ input[type=file]{display:none}
 .savednote{
   text-align:center;font-size:13px;color:var(--muted);margin-top:-2px;
 }
+
+/* ---------- сегментный переключатель в строке формы ---------- */
+/* Для взноса: «%» или «₽» на входе и что из этого показывать в макете.
+   Компактный, потому что живёт внутри строки рядом с полем ввода. */
+.seg{display:flex;gap:2px;padding:2px;background:var(--surface-2);border-radius:9px;flex:none}
+.seg button{
+  min-width:30px;padding:5px 9px;border-radius:7px;
+  font-size:12.5px;font-weight:600;color:var(--muted);
+  transition:background .14s ease,color .14s ease;
+}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--text);box-shadow:var(--shadow-1)}
+.seg.wide{margin-left:auto}
+.seg.wide button{min-width:auto;padding:5px 11px}
+
+/* Пересчёт «это столько-то» — справочная строка, тише, чем итоговый платёж */
+.row.result.soft{background:transparent;min-height:40px}
+.row.result.soft label{color:var(--muted);font-weight:400}
+.row.result.soft .v{font-size:14px;color:var(--text-2);font-weight:600}

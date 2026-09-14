@@ -19,7 +19,9 @@ export const FORM_SECTIONS = [
     showPayment: true,
     rows: [
       { k: "price", label: "Цена",         type: "money",  unit: "₽" },
-      { k: "down",  label: "Первый взнос", type: "number", unit: "%",   step: "1" },
+      // Взнос — особая строка: его задают то процентом, то суммой, и он же
+      // по-разному подписывается в макете. Разметка в components/FormSection.
+      { k: "down",  label: "Первый взнос", type: "down" },
       { k: "rate",  label: "Ставка",       type: "number", unit: "%",   step: "0.1" },
       { k: "term",  label: "Срок",         type: "number", unit: "лет", step: "1" }
     ]

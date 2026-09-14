@@ -4,28 +4,34 @@ import { logError, logInfo } from "./log";
 /**
  * Сохранить готовый макет.
  *
- * Раньше здесь было window.open(url) — в Telegram это открывало картинку
- * отдельной вкладкой браузера, и человек оставался с открытой страницей
- * вместо файла в галерее.
+ * Путь зависит от того, где мы открыты, и разница принципиальная:
  *
- * Теперь три пути, по убыванию «правильности»:
- * На телефоне и на компьютере правильный путь разный, поэтому порядок
- * попыток свой для каждого:
+ *   телефон в Telegram — системное «Поделиться» с готовым файлом: в меню
+ *       есть «Сохранить изображение», и картинка идёт прямо в галерею;
+ *   компьютер в Telegram — downloadFile самого Telegram;
+ *   обычный браузер — тихое скачивание в загрузки, без единого окна.
  *
- *   телефон   — системное «Поделиться» с готовым файлом (в меню есть
- *               «Сохранить изображение», картинка идёт в галерею), затем
- *               окно Telegram, затем открыть картинку;
- *   компьютер — тихое скачивание в загрузки без единого окна, затем
- *               Telegram, затем открыть.
+ * Почему в Telegram на компьютере нельзя обычным способом. Скачивание
+ * через <a download> держится на blob:-ссылке, а клиент Telegram на маке
+ * перехватывает переход и отдаёт такую ссылку системе — macOS не знает,
+ * чем открыть «blob:https://…», и показывает «Не указана программа для
+ * открытия URL-адреса». Приложение при этом бодро писало «файл сохранён».
+ * Поэтому внутри Telegram blob не используем вовсе: там своё средство.
  *
  * Одно подтверждение на телефоне неизбежно: ни одна веб-страница не может
- * писать в галерею молча — так устроены и iOS, и Android. Мы можем только
- * выбрать, чьё это будет окно: системное меню «Поделиться» короче и
+ * писать в галерею молча — так устроены и iOS, и Android. Выбрать можно
+ * только, чьё это будет окно: системное меню «Поделиться» короче и
  * понятнее, чем «Скачать файл?» от Telegram.
  *
  * Возвращает, каким путём пошло: shared · file · telegram · opened · cancelled.
  */
 const isPhone = () => /iphone|ipad|ipod|android/i.test(navigator.userAgent);
+
+/** Мы внутри клиента Telegram, а не в обычной вкладке браузера. */
+const inTelegram = () => {
+  const app = tg();
+  return Boolean(app && (app.initData || app.platform && app.platform !== "unknown"));
+};
 
 async function asBlob(absolute) {
   if (absolute.startsWith("data:")) {
@@ -48,7 +54,9 @@ export async function saveImage(url, fileName) {
 
   const order = isPhone()
     ? [viaShare, viaTelegram, viaDownload]
-    : [viaDownload, viaTelegram];
+    : inTelegram()
+      ? [viaTelegram, viaShare]        // blob внутри Telegram ломается, см. шапку
+      : [viaDownload];
 
   for (const step of order) {
     const how = await step(absolute, fileName);
@@ -61,7 +69,7 @@ export async function saveImage(url, fileName) {
 
 /** Системное меню «Поделиться» с файлом. Оттуда — прямо в галерею. */
 async function viaShare(absolute, fileName) {
-  if (!navigator.canShare) return null;
+  if (!navigator.canShare || !navigator.share) return null;
   try {
     const blob = await asBlob(absolute);
     const file = new File([blob], fileName, { type: blob.type || "image/png" });

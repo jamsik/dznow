@@ -1,6 +1,6 @@
 import CountValue from "./CountValue";
 import { StoryHead, StoryFoot, StoryPlan } from "./BrandBits";
-import { annuity, group, money, num, short } from "../lib/format";
+import { annuity, group, money, num, short, downLabel } from "../lib/format";
 
 /** realty.flat.v1 · макет «Крупная цифра» */
 export default function RealtyFigure({ d, show, agency, author, playing }) {
@@ -26,7 +26,7 @@ export default function RealtyFigure({ d, show, agency, author, playing }) {
           <span className="k">Стоимость</span><span className="v">{short(d.price)}</span>
         </div>
         <div className="row anim" style={{ "--d": ".88s" }}>
-          <span className="k">Первый взнос</span><span className="v">{short(d.price * d.down / 100)}</span>
+          <span className="k">Первый взнос</span><span className="v">{downLabel(d)}</span>
         </div>
         <div className="row anim" style={{ "--d": ".96s" }}>
           <span className="k">Ставка / срок</span><span className="v">{num(d.rate)}% · {num(d.term)} лет</span>
@@ -42,7 +42,7 @@ export default function RealtyFigure({ d, show, agency, author, playing }) {
           <CountValue className="amt" value={pay} format={money} playing={playing} delay={1.3} />
         </div>
         <div className="terms">
-          взнос {num(d.down)}% · {num(d.rate)}%<br />на {num(d.term)} лет
+          взнос {downLabel(d)} · {num(d.rate)}%<br />на {num(d.term)} лет
         </div>
       </div>
 
