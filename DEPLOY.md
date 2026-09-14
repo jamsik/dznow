@@ -102,19 +102,36 @@ git ls-files | findstr /i ".env"
 
 ### 3.1. Поддомен
 
-Нужна A-запись `dznow.ВАШДОМЕН` → IP этого сервера, в панели регистратора.
-Проверить, что разошлась: `dig +short dznow.ВАШДОМЕН` должен вернуть тот же IP,
-что `curl -s ifconfig.me` на сервере.
+Домен уже есть — `varezhka.top`, сертификаты выпускает certbot. Берём
+поддомен **`dznow.varezhka.top`**.
 
-Если добавить запись нельзя, DZNOW можно повесить путём на существующий домен
-(`https://домен/dznow/`) — Mini App так тоже работает, но придётся собрать фронт
-с `base: "/dznow/"` в `vite.config.js`. Поддомен проще, начните с него.
+Единственное, что делается руками и не автоматизируется: в панели регистратора
+(там же, где заведён `varezhka.top`) добавить A-запись
+
+```
+dznow   A   <IP этого сервера>
+```
+
+IP сервера: `curl -s ifconfig.me`. Что запись разошлась, проверяется так —
+обе команды должны вернуть один и тот же адрес:
+
+```bash
+curl -s ifconfig.me; echo
+dig +short dznow.varezhka.top
+```
+
+Обычно это минуты, иногда до часа. Пока `dig` молчит, certbot запускать
+бессмысленно: Let's Encrypt не сможет подтвердить домен.
+
+Существующий сертификат тут не поможет: он выписан на `varezhka.top` и
+`www.varezhka.top`, поддомены в него не входят. Certbot выпишет отдельный,
+конфиг `friends-gacha` при этом не изменится.
 
 ### 3.2. Контейнеры
 
 ```bash
 cd /opt
-git clone https://github.com/ВАШ_ЛОГИН/dznow.git
+git clone https://github.com/ВАШ_ЛОГИН/dznow.git   # рядом с /opt/friends-gacha
 cd dznow
 cp .env.example .env
 nano .env
@@ -125,7 +142,7 @@ nano .env
 
 ```
 BOT_TOKEN=8123456789:AAH...
-APP_URL=https://dznow.ВАШДОМЕН
+APP_URL=https://dznow.varezhka.top
 BOT_USERNAME=dznow_test_bot
 ```
 
@@ -139,12 +156,10 @@ curl -s localhost:8010/api/health    # {"ok":true}
 
 ### 3.3. nginx
 
-В репозитории лежит готовый файл — в нём поменять `dznow.ВАШДОМЕН` на свой
-поддомен и положить на место:
+В репозитории лежит готовый файл, поддомен в нём уже проставлен:
 
 ```bash
 sudo cp deploy/nginx/dznow.conf /etc/nginx/sites-available/dznow
-sudo sed -i 's/dznow.ВАШДОМЕН/dznow.вашдомен.ru/' /etc/nginx/sites-available/dznow
 sudo ln -s /etc/nginx/sites-available/dznow /etc/nginx/sites-enabled/dznow
 sudo nginx -t && sudo systemctl reload nginx
 ```
@@ -155,11 +170,12 @@ sudo nginx -t && sudo systemctl reload nginx
 Сертификат:
 
 ```bash
-sudo certbot --nginx -d dznow.вашдомен.ru
+sudo certbot --nginx -d dznow.varezhka.top
 ```
 
-Certbot сам допишет в файл блок `:443` и редирект с `:80`. Если certbot не
-установлен — `sudo snap install --classic certbot`.
+Certbot сам допишет в файл блок `:443` и редирект с `:80` — ровно так же, как
+он это сделал для `friends-gacha` (там его следы видны по комментариям
+`# managed by Certbot`). Certbot на сервере уже стоит и работает.
 
 ### 3.4. Запустить бота
 
@@ -186,30 +202,43 @@ docker compose logs bot   # «бот @… запущен, приложение: 
 ```
 Проект DZNOW лежит в F:\DZNOW (Windows). Нужно:
 
-1. Локально: git init -b main (если ещё нет), git add ., commit, создать
-   публичный репозиторий dznow на GitHub и запушить main.
-   Перед пушем убедиться, что .env не попал в индекс: git ls-files | grep -i env
-   должен показать только .env.example и web/.env.example.
+Цель: развернуть DZNOW на https://dznow.varezhka.top рядом с friends-gacha,
+не задев friends-gacha.
 
-2. На сервере по SSH:
+1. Локально (F:\DZNOW): git init -b main, git add ., commit, создать публичный
+   репозиторий dznow на GitHub, запушить main.
+   Перед пушем проверить, что секреты не уехали:
+   git ls-files | grep -i env   → только .env.example и web/.env.example.
+
+2. Предусловие: A-запись dznow.varezhka.top должна указывать на IP сервера.
+   Проверить: dig +short dznow.varezhka.top совпадает с curl -s ifconfig.me.
+   Не совпало — остановиться и сказать владельцу, дальше идти нельзя.
+
+3. На сервере:
    - git clone в /opt/dznow
-   - cp .env.example .env, заполнить BOT_TOKEN, APP_URL=https://<поддомен>,
-     BOT_USERNAME (значения спросить у владельца, токен в git не коммитить)
-   - docker compose up -d --build
-   - проверить: docker compose ps (app healthy), curl localhost:8010/api/health
+   - cp .env.example .env и заполнить:
+       BOT_TOKEN=<токен от @BotFather, спросить у владельца, в git не коммитить>
+       APP_URL=https://dznow.varezhka.top
+       BOT_USERNAME=<username бота без @>
+   - docker compose up -d --build     (первая сборка долгая: ставится Chromium)
+   - docker compose ps                → app healthy, bot running
+   - curl -s localhost:8010/api/health → {"ok":true}
 
-3. nginx (он на хосте, версия 1.18, рядом работает сайт friends-gacha —
-   его не трогать):
+4. nginx — он на хосте (1.18), рядом живёт сайт friends-gacha на
+   varezhka.top:8000. Файл friends-gacha НЕ редактировать.
    - cp deploy/nginx/dznow.conf /etc/nginx/sites-available/dznow
-   - подставить реальный поддомен вместо dznow.ВАШДОМЕН
-   - ln -s в sites-enabled
-   - nginx -t; только при «syntax is ok» — systemctl reload nginx
-   - certbot --nginx -d <поддомен>
+     (поддомен в файле уже проставлен)
+   - ln -s /etc/nginx/sites-available/dznow /etc/nginx/sites-enabled/dznow
+   - nginx -t  →  только при «syntax is ok»: systemctl reload nginx
+     Если -t ругается: удалить симлинк и разбираться, не перезагружая nginx,
+     иначе упадёт и varezhka.top.
+   - certbot --nginx -d dznow.varezhka.top
 
-4. docker compose logs bot — в логе должно быть «бот @… запущен».
+5. docker compose logs bot → «бот @… запущен, приложение: https://…»
+   curl -sI https://dznow.varezhka.top → 200.
 
-Порт 8010 на сервере свободен, 8000 занят соседним проектом. Compose-проект
-называется dznow, тома свои, пересечений с friends-gacha нет.
+Порт 8010 свободен, 8000 занят соседом. Compose-проект называется dznow,
+тома dznow-data — пересечений с friends-gacha нет.
 ```
 
 ---
@@ -253,6 +282,58 @@ docker compose up -d --build
 ```
 
 Проекты и готовые файлы лежат в томе `dznow-data` и пересборку переживают.
+
+---
+
+## Память: обязательный swap
+
+Сервер уже один раз завис из-за этого, поэтому пункт не «желательно», а
+«сделать до следующего запуска».
+
+Машина — 957 МБ без файла подкачки. Chromium на странице 1080×1920 просит
+300–400 МБ, рядом живут два контейнера гачи, nginx и сам Docker. Когда
+память кончается, ядро начинает убивать процессы по своему усмотрению —
+и убивает не обязательно виновника: в прошлый раз досталось боту DZNOW,
+потом завис health-check, а потом перестал отвечать SSH.
+
+**Swap на 2 ГБ.** Пять команд, машину перезагружать не нужно:
+
+```bash
+sudo fallocate -l 2G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+free -h                      # в строке Swap должно появиться 2,0Gi
+```
+
+Последняя строка добавляет swap в `/etc/fstab`, иначе он пропадёт после
+перезагрузки.
+
+Swap — это не «больше памяти», а страховка: система начинает тормозить
+вместо того, чтобы убивать процессы. Для сборки картинок раз в минуту
+этого достаточно.
+
+**Что уже сделано в коде.** У контейнера `app` стоит `mem_limit: 600m`:
+теперь при нехватке памяти упирается и падает только он, а сервер остаётся
+на связи. Chromium запускается с урезанным набором подсистем, контекст
+пересоздаётся каждые 20 макетов, а после 10 минут простоя браузер
+закрывается целиком — ночью DZNOW не занимает ничего. Очередь ограничена
+тремя заданиями: четвёртый получит честное «попробуйте через минуту»
+вместо общего зависания.
+
+**Заодно приберитесь.** Старые образы после пересборок занимают гигабайты:
+
+```bash
+docker image prune -a -f
+docker builder prune -f
+df -h /
+```
+
+**Что дальше.** Всё перечисленное — обход тесноты, а не решение. Два
+гигабайта памяти у VPS стоят недорого и снимают вопрос: тогда в
+`docker-compose.yml` можно поднять `mem_limit` до `1g`, и рендер перестанет
+ходить по краю.
 
 ---
 

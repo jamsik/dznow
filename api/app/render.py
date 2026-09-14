@@ -26,6 +26,34 @@ from .config import CHROMIUM_NO_SANDBOX, FILES_DIR, RENDER_URL
 
 VIEWPORT = {"width": 1080, "height": 1920}
 JOB_TIMEOUT = 90          # сколько ждём один макет, секунды
+
+# Три числа против нехватки памяти. Chromium на странице 1080×1920 просит
+# 300–400 МБ, и на маленькой машине это ровно та величина, после которой
+# ядро начинает убивать процессы — а убивает оно не обязательно Chromium.
+IDLE_SHUTDOWN = 600       # столько секунд тишины — и браузер закрывается
+CONTEXT_RENDERS = 20      # столько макетов на один контекст, потом заново
+MAX_QUEUE = 3             # больше в очереди не копим, честно отказываем
+
+# Chromium в контейнере: всё лишнее выключено. Каждая строка здесь — это
+# процесс или подсистема, которая иначе съест десятки мегабайт ни за что.
+BROWSER_ARGS = [
+    "--font-render-hinting=none",
+    "--disable-gpu",
+    "--disable-software-rasterizer",
+    "--disable-extensions",
+    "--disable-background-networking",
+    "--disable-background-timer-throttling",
+    "--disable-sync",
+    "--disable-translate",
+    "--metrics-recording-only",
+    "--mute-audio",
+    "--no-first-run",
+    "--renderer-process-limit=1",
+    # Потолок для сборщика мусора в движке: без него V8 разрастается
+    # «про запас», ориентируясь на всю память машины.
+    "--js-flags=--max-old-space-size=256",
+]
+
 _jobs: "queue.Queue" = queue.Queue()
 _worker: "threading.Thread | None" = None
 _lock = threading.Lock()
@@ -87,59 +115,97 @@ def _fail_pending(exc: BaseException) -> None:
 
 
 def _run_worker() -> None:
+    """
+    Браузер живёт ровно столько, сколько нужен.
+    
+    Один контекст на несколько рендеров подряд — это разница в разы:
+    browser.new_page() в Playwright заводит НОВЫЙ контекст, а у каждого
+    контекста свой кеш, и на каждый макет Chromium заново скачивал шрифты
+    и картинки.
+    
+    Но у общего контекста есть цена: он не отдаёт память. На машине, где
+    всей памяти меньше гигабайта, постоянно висящий Chromium — это тот
+    самый кусок, из-за которого ядро начинает убивать процессы, и убивает
+    не обязательно виновника: в прошлый раз досталось боту и SSH.
+    
+    Поэтому память возвращается в двух местах: контекст пересоздаётся
+    каждые CONTEXT_RENDERS макетов, а после IDLE_SHUTDOWN секунд тишины
+    закрывается весь браузер и поток заканчивается. Следующий запрос
+    поднимет всё заново — это пара секунд на холодный старт, и они того
+    стоят: ночью, когда никто ничего не делает, DZNOW не занимает ничего.
+    """
+    browser = None
+    context = None
+    made = 0
     try:
         with sync_playwright() as p:
-            args = ["--font-render-hinting=none"]
+            args = list(BROWSER_ARGS)
             if CHROMIUM_NO_SANDBOX:
                 args += ["--no-sandbox", "--disable-dev-shm-usage"]
-            browser = p.chromium.launch(args=args)
 
-            # Один контекст на все рендеры — это не мелочь, а разница в разы.
-            #
-            # browser.new_page() в Playwright заводит НОВЫЙ контекст, а у
-            # каждого контекста свой кеш. То есть на каждый макет Chromium
-            # заново ходил в fonts.googleapis.com за таблицей стилей и в
-            # fonts.gstatic.com за каждым шрифтом — и делал это по сети из
-            # серверной стойки, где до Google далеко.
-            #
-            # С общим контекстом шрифты и картинки скачиваются один раз за
-            # жизнь воркера, дальше берутся из кеша. Страницы по-прежнему
-            # создаются и закрываются на каждый макет, так что состояние
-            # одного рендера не протекает в следующий.
-            context = browser.new_context(viewport=VIEWPORT, device_scale_factor=1)
-            try:
-                while True:
-                    payload, fut = _jobs.get()
-                    if payload is None:          # сигнал на остановку
-                        return
-                    if not fut.set_running_or_notify_cancel():
-                        continue
-                    try:
-                        fut.set_result(_shoot(context, payload))
-                    except BaseException as exc:  # один плохой макет не роняет воркер
-                        fut.set_exception(exc)
-            finally:
-                context.close()
-                browser.close()
+            while True:
+                try:
+                    payload, fut = _jobs.get(timeout=IDLE_SHUTDOWN)
+                except queue.Empty:
+                    # Тишина. Проверяем под замком: вдруг прямо сейчас кто-то
+                    # кладёт задание — тогда не расходимся.
+                    with _lock:
+                        if _jobs.empty():
+                            print("[dznow] простой — закрываю Chromium", flush=True)
+                            return
+                    continue
+
+                if payload is None:              # сигнал на остановку
+                    return
+                if not fut.set_running_or_notify_cancel():
+                    continue
+
+                try:
+                    if browser is None:
+                        browser = p.chromium.launch(args=args)
+                        context = browser.new_context(viewport=VIEWPORT, device_scale_factor=1)
+                        made = 0
+                    elif made >= CONTEXT_RENDERS:
+                        context.close()
+                        context = browser.new_context(viewport=VIEWPORT, device_scale_factor=1)
+                        made = 0
+                        print("[dznow] контекст пересоздан, память отпущена", flush=True)
+
+                    fut.set_result(_shoot(context, payload))
+                    made += 1
+                except BaseException as exc:     # один плохой макет не роняет воркер
+                    fut.set_exception(exc)
     except BaseException as exc:
         # Chromium не установлен, нет прав, кончилась память — что угодно.
         # Отдаём ошибку тем, кто уже ждёт; следующий запрос поднимет поток заново.
         _fail_pending(exc)
-
-
-def _ensure_worker() -> None:
-    global _worker
-    with _lock:
-        if _worker is None or not _worker.is_alive():
-            _worker = threading.Thread(target=_run_worker, name="dznow-render", daemon=True)
-            _worker.start()
+    finally:
+        for closer in (context, browser):
+            try:
+                if closer is not None:
+                    closer.close()
+            except Exception:
+                pass
 
 
 async def render_png(payload: dict) -> str:
     """Ставит макет в очередь и ждёт имя готового файла в FILES_DIR."""
-    _ensure_worker()
+    # Очередь не резиновая. Рендеры идут по одному, и если желающих больше
+    # горстки — честнее отказать сразу, чем держать всех в ожидании, пока
+    # у машины кончится память.
+    if _jobs.qsize() >= MAX_QUEUE:
+        raise RuntimeError("Сейчас собирается несколько макетов подряд, попробуйте через минуту")
+
     fut: Future = Future()
-    _jobs.put((payload, fut))
+    # Кладём и поднимаем воркер под одним замком: иначе он мог решить, что
+    # работы нет, и закрыться ровно между этими двумя строчками.
+    with _lock:
+        _jobs.put((payload, fut))
+        global _worker
+        if _worker is None or not _worker.is_alive():
+            _worker = threading.Thread(target=_run_worker, name="dznow-render", daemon=True)
+            _worker.start()
+
     return await asyncio.wait_for(asyncio.wrap_future(fut), timeout=JOB_TIMEOUT)
 
 

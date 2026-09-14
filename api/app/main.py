@@ -108,6 +108,11 @@ async def render(req: RenderRequest, x_telegram_init_data: str = Header("")):
         name = await render_png(payload)
     except asyncio.TimeoutError:
         raise HTTPException(status_code=504, detail="Рендер не уложился в отведённое время")
+    except RuntimeError as exc:
+        # Очередь переполнена. Это не поломка, а защита: рендеры идут по
+        # одному, и копить их без предела на маленькой машине — верный
+        # способ упереться в память и утащить за собой весь сервер.
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
     except Exception as exc:
         # Самое частое: не установлен Chromium (python -m playwright install chromium)
         # или RENDER_URL не отвечает, потому что не запущен фронтенд.
