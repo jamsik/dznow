@@ -1,11 +1,54 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { annuity, downPayment, group, money, num, short } from "../lib/format";
+
+/**
+ * Ввод чисел. Здесь была настоящая ошибка, а не придирка.
+ *
+ * Поля стояли как type="number", а значение считалось через
+ * `Number(raw) || 0`. Стоило начать набирать «54,» — строка переставала
+ * быть числом, Number давал NaN, `|| 0` превращал его в ноль, и набранное
+ * пропадало на глазах. Отсюда и «ставлю запятую — цифры слетают», и
+ * «проще долго тыкать стрелочку». Плюс type="number" в части браузеров
+ * сам стирает содержимое, когда считает его недопустимым, — поэтому
+ * симптом плавал и не воспроизводился по заказу.
+ *
+ * Теперь поле текстовое с цифровой клавиатурой (inputMode), набранное
+ * хранится как есть, а в данные попадает только то, что уже стало числом.
+ * «54,» — ещё не число: значение просто не трогаем, пока не появится цифра.
+ */
+
+/** Разрешено ли это как промежуточный ввод. null — символ не принимаем. */
+function numDraft(raw) {
+  const s = String(raw).replace(/\s/g, "");
+  if (s === "") return "";
+  if (!/^\d*[.,]?\d*$/.test(s)) return null;   // буквы, минус, второй разделитель
+  return s.replace(/^0+(?=\d)/, "");           // 0030 → 30, но «0,5» не трогаем
+}
+
+/** Число из набранного. null — набор ещё не закончен. */
+function parseNum(text) {
+  if (text === "" || /[.,]$/.test(text)) return null;
+  const n = Number(String(text).replace(",", "."));
+  return Number.isFinite(n) ? n : null;
+}
 
 /** Строка формы. Числовые поля правятся, но не мешают вводу: цена
  *  форматируется на blur, чтобы каретка не прыгала во время набора. */
 function Row({ field, value, onChange }) {
-  const [local, setLocal] = useState(field.type === "money" ? group(value) : value);
-  useEffect(() => { setLocal(field.type === "money" ? group(value) : value); }, [value, field.type]);
+  const show = v => (field.type === "money" ? group(v) : String(v ?? ""));
+  const [local, setLocal] = useState(() => show(value));
+
+  // Что мы сами только что отправили наверх. Без этого «54,3» на секунду
+  // превращалось в «54.3»: значение возвращалось из состояния числом и
+  // затирало набранное вместе с запятой.
+  const emitted = useRef(value);
+  useEffect(() => {
+    if (value === emitted.current) return;
+    emitted.current = value;
+    setLocal(show(value));
+  }, [value, field.type]);   // eslint-disable-line react-hooks/exhaustive-deps
+
+  const emit = n => { emitted.current = n; onChange(field.k, n); };
 
   if (field.type === "select") {
     return (
@@ -20,22 +63,40 @@ function Row({ field, value, onChange }) {
 
   const isMoney = field.type === "money";
   const isNumber = field.type === "number";
+
+  const handle = raw => {
+    if (isMoney) {
+      const digits = raw.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
+      setLocal(digits);
+      emit(Number(digits) || 0);
+      return;
+    }
+    if (isNumber) {
+      const draft = numDraft(raw);
+      if (draft === null) return;          // недопустимый символ — просто игнорируем
+      setLocal(draft);
+      const n = parseNum(draft);
+      if (n !== null) emit(n);             // «54,» ещё не число — значение не трогаем
+      return;
+    }
+    setLocal(raw);
+    emit(raw);
+  };
+
   return (
     <div className="row">
       <label htmlFor={"f-" + field.k}>{field.label}</label>
       <input
         id={"f-" + field.k}
-        type={isNumber ? "number" : "text"}
+        // Везде text: type="number" то не принимает запятую, то стирает
+        // набранное сам. Цифровую клавиатуру даёт inputMode.
+        type="text"
         inputMode={isMoney ? "numeric" : isNumber ? "decimal" : undefined}
-        step={field.step}
         value={local}
-        onChange={e => {
-          setLocal(e.target.value);
-          const raw = e.target.value;
-          onChange(field.k, isMoney ? Number(raw.replace(/[^\d]/g, "")) || 0
-                        : isNumber ? Number(raw) || 0 : raw);
-        }}
-        onBlur={() => { if (isMoney) setLocal(group(value)); }}
+        onChange={e => handle(e.target.value)}
+        // На выходе приводим к нормальному виду: «54,» → «54», «0030» → «30»,
+        // пустое поле возвращает прежнее значение, а не ноль.
+        onBlur={() => setLocal(show(value))}
       />
       {field.unit && <span className="unit">{field.unit}</span>}
     </div>
@@ -63,11 +124,22 @@ function DownRows({ draft, onChange }) {
   const bySum = draft.downMode === "sum";
   const { sum, percent } = downPayment(draft);
 
-  const raw = bySum ? draft.downSum : draft.down;
-  const [local, setLocal] = useState(bySum ? group(raw) : raw);
+  const shown = () => (draft.downMode === "sum"
+    ? group(draft.downSum)
+    : String(draft.down ?? ""));
+  const [local, setLocal] = useState(shown);
+
+  // Та же защита, что и в обычной строке: пока набирают «20,», значение
+  // наверх не уходит, и обратной волной запятую не затирает.
+  const emitted = useRef(null);
   useEffect(() => {
-    setLocal(draft.downMode === "sum" ? group(draft.downSum) : draft.down);
-  }, [draft.down, draft.downSum, draft.downMode]);
+    const now = draft.downMode === "sum" ? draft.downSum : draft.down;
+    if (now === emitted.current) return;
+    emitted.current = now;
+    setLocal(shown());
+  }, [draft.down, draft.downSum, draft.downMode]);   // eslint-disable-line react-hooks/exhaustive-deps
+
+  const emit = (key, n) => { emitted.current = n; onChange(key, n); };
 
   // При переключении ведущее значение пересчитывается из текущего, а не
   // сбрасывается: 20,1% превращается в свои рубли, и наоборот.
@@ -88,17 +160,24 @@ function DownRows({ draft, onChange }) {
         </div>
         <input
           id="f-down"
-          type={bySum ? "text" : "number"}
+          type="text"
           inputMode="decimal"
-          step={bySum ? undefined : "0.1"}
           value={local}
           onChange={e => {
             const v = e.target.value;
-            setLocal(v);
-            if (bySum) onChange("downSum", Number(v.replace(/[^\d]/g, "")) || 0);
-            else onChange("down", Number(v.replace(",", ".")) || 0);
+            if (bySum) {
+              const digits = v.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
+              setLocal(digits);
+              emit("downSum", Number(digits) || 0);
+              return;
+            }
+            const drafted = numDraft(v);
+            if (drafted === null) return;
+            setLocal(drafted);
+            const n = parseNum(drafted);
+            if (n !== null) emit("down", n);
           }}
-          onBlur={() => { if (bySum) setLocal(group(draft.downSum)); }}
+          onBlur={() => setLocal(shown())}
         />
         <span className="unit">{bySum ? "₽" : "%"}</span>
       </div>

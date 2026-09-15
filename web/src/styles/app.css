@@ -673,3 +673,6 @@ input[type=file]{display:none}
 .row.result.soft{background:transparent;min-height:40px}
 .row.result.soft label{color:var(--muted);font-weight:400}
 .row.result.soft .v{font-size:14px;color:var(--text-2);font-weight:600}
+
+/* дата сборки в «Профиле» — по ней видно, доехало обновление или нет */
+.build{color:var(--muted);font-size:12px;font-family:var(--mono)}

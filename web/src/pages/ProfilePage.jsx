@@ -133,6 +133,10 @@ export default function ProfilePage({ profile, setProfile, projects }) {
  * Поэтому всё, что приложение пишет в журнал (lib/log.js), видно здесь,
  * и есть кнопка «Скопировать» — журнал уезжает текстом в переписку.
  */
+// Дата сборки зашивается в бандл в Dockerfile. Видно её здесь — и сразу
+// понятно, доехало обновление до сервера или нет.
+const BUILD = import.meta.env.VITE_BUILD || "";
+
 function DevSection() {
   const [open, setOpen] = useState(false);
   const [, bump] = useState(0);
@@ -174,6 +178,7 @@ function DevSection() {
           {isMock
             ? "Бэкенд не подключён: профиль и макеты хранятся в этом браузере."
             : "Бэкенд подключён: макеты и рендер живут на сервере."}
+          {BUILD && <><br /><span className="build">Сборка {BUILD}</span></>}
         </div>
       </div>
 
