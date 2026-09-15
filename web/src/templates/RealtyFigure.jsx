@@ -1,6 +1,6 @@
 import CountValue from "./CountValue";
 import { StoryHead, StoryFoot, StoryPlan } from "./BrandBits";
-import { annuity, group, money, num, short, downLabel } from "../lib/format";
+import { annuity, downLabel, group, money, num } from "../lib/format";
 
 /** realty.flat.v1 · макет «Крупная цифра» */
 export default function RealtyFigure({ d, show, agency, author, playing }) {
@@ -23,7 +23,7 @@ export default function RealtyFigure({ d, show, agency, author, playing }) {
 
       <div className="s-list">
         <div className="row anim" style={{ "--d": ".8s" }}>
-          <span className="k">Стоимость</span><span className="v">{short(d.price)}</span>
+          <span className="k">Стоимость</span><span className="v">{money(d.price)}</span>
         </div>
         <div className="row anim" style={{ "--d": ".88s" }}>
           <span className="k">Первый взнос</span><span className="v">{downLabel(d)}</span>
@@ -38,7 +38,7 @@ export default function RealtyFigure({ d, show, agency, author, playing }) {
 
       <div className="s-mortgage anim" style={{ "--d": "1.3s" }}>
         <div>
-          <div className="lab">В ипотеку от</div>
+          <div className="lab">В ипотеку</div>
           <CountValue className="amt" value={pay} format={money} playing={playing} delay={1.3} />
         </div>
         <div className="terms">

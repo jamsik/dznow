@@ -25,12 +25,16 @@ export function downPayment(d = {}) {
   return { sum, percent: price > 0 ? (sum / price) * 100 : 0 };
 }
 
-/** Как взнос подписан в макете: процентом, суммой или и тем и другим. */
+/**
+ * Как взнос подписан в макете: процентом, суммой или и тем и другим.
+ * Сумма — точная, без «млн»: клиент считает свои деньги до рубля,
+ * и округление в рекламе потом приходится объяснять.
+ */
 export function downLabel(d = {}) {
   const { sum, percent } = downPayment(d);
   const p = num(percent) + "%";
-  if (d.downShow === "sum") return short(sum);
-  if (d.downShow === "both") return `${short(sum)} · ${p}`;
+  if (d.downShow === "sum") return money(sum);
+  if (d.downShow === "both") return `${money(sum)} · ${p}`;
   return p;
 }
 
