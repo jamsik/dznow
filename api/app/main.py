@@ -13,7 +13,7 @@ from pydantic import BaseModel
 
 from . import db
 from .auth import validate
-from .config import DIST_DIR, FILES_DIR
+from .config import DATA_DIR, DIST_DIR, FILES_DIR
 from .render import render_png, shutdown
 
 app = FastAPI(title="DZNOW API", version="0.1.0")
