@@ -69,9 +69,12 @@ async function call(path, options = {}) {
       try { detail = (await res.text()).slice(0, 200); } catch {}
     }
     logError(`${path}: ${res.status} за ${ms} мс`, detail);
+    const looksLikeProxyPage = /^\s*</.test(detail);
     const human = res.status === 401
       ? "Telegram не подтвердил вход. Откройте приложение заново из бота."
-      : detail || `Сервер ответил ${res.status}`;
+      : res.status >= 500 && (looksLikeProxyPage || !detail)
+        ? "Сервер не смог обработать запрос — скорее всего, ему не хватило места или памяти. Попробуйте ещё раз чуть позже."
+        : detail || `Сервер ответил ${res.status}`;
     const err = new Error(human);
     err.status = res.status;
     throw err;

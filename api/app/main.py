@@ -1,6 +1,8 @@
 import asyncio
+import contextlib
 import hashlib
 import mimetypes
+import shutil
 import time
 
 from fastapi import FastAPI, Header, HTTPException, Request
@@ -25,6 +27,10 @@ app.add_middleware(
 )
 
 AGENCY = {"name": "Дом и Ключ", "mark": "ДК", "color": "#1F4B3F"}
+FILE_CLEANUP_INTERVAL = 6 * 60 * 60
+RENDER_MAX_AGE = 7 * 24 * 60 * 60
+UPLOAD_MAX_AGE = 60 * 24 * 60 * 60
+_cleanup_task: asyncio.Task | None = None
 
 
 class Project(BaseModel):
@@ -50,19 +56,64 @@ def current_user(init_data: str):
     return user
 
 
+def cleanup_files(now: float | None = None) -> int:
+    """Delete expired generated files, leaving unknown files untouched."""
+    cutoff = time.time() if now is None else now
+    removed = 0
+    for path in FILES_DIR.iterdir():
+        if not path.is_file():
+            continue
+        max_age = UPLOAD_MAX_AGE if path.name.startswith("u_") else (
+            RENDER_MAX_AGE if path.name.startswith("dznow_") and path.suffix == ".png" else None
+        )
+        if max_age is None:
+            continue
+        try:
+            if cutoff - path.stat().st_mtime > max_age:
+                path.unlink()
+                removed += 1
+        except FileNotFoundError:
+            pass
+    return removed
+
+
+async def cleanup_files_periodically():
+    while True:
+        await asyncio.sleep(FILE_CLEANUP_INTERVAL)
+        removed = await asyncio.to_thread(cleanup_files)
+        if removed:
+            print(f"[dznow] удалено старых файлов: {removed}", flush=True)
+
+
 @app.on_event("startup")
-def _startup():
+async def _startup():
+    global _cleanup_task
     db.init()
+    removed = await asyncio.to_thread(cleanup_files)
+    if removed:
+        print(f"[dznow] удалено старых файлов при запуске: {removed}", flush=True)
+    _cleanup_task = asyncio.create_task(cleanup_files_periodically())
 
 
 @app.on_event("shutdown")
 async def _shutdown():
+    if _cleanup_task:
+        _cleanup_task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await _cleanup_task
     await shutdown()
 
 
 @app.get("/api/health")
 def health():
-    return {"ok": True}
+    disk = shutil.disk_usage(DATA_DIR)
+    files = sum(1 for path in FILES_DIR.iterdir() if path.is_file())
+    return {
+        "ok": True,
+        "disk_free_mb": round(disk.free / 1024 / 1024),
+        "disk_used_pct": round((disk.used / disk.total) * 100, 1),
+        "files": files,
+    }
 
 
 @app.get("/api/me")
