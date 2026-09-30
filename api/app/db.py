@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY,
     name TEXT NOT NULL DEFAULT '',
     username TEXT NOT NULL DEFAULT '',
+    note TEXT NOT NULL DEFAULT '',
     service_access INTEGER NOT NULL DEFAULT 0,
     first_seen INTEGER NOT NULL,
     last_seen INTEGER NOT NULL
@@ -52,6 +53,9 @@ def init():
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     with conn() as c:
         c.executescript(SCHEMA)
+        user_columns = {row["name"] for row in c.execute("PRAGMA table_info(users)")}
+        if "note" not in user_columns:
+            c.execute("ALTER TABLE users ADD COLUMN note TEXT NOT NULL DEFAULT ''")
         columns = {row["name"] for row in c.execute("PRAGMA table_info(projects)")}
         if "template_id" not in columns:
             c.execute("ALTER TABLE projects ADD COLUMN template_id TEXT")
@@ -104,7 +108,7 @@ def list_users() -> list[dict]:
     by_user = {}
     for row in access:
         by_user.setdefault(row["user_id"], []).append(row["template_id"])
-    return [{"id": r["id"], "name": r["name"], "username": r["username"],
+    return [{"id": r["id"], "name": r["name"], "username": r["username"], "note": r["note"],
              "service_access": bool(r["service_access"]), "first_seen": r["first_seen"],
              "last_seen": r["last_seen"], "templates": by_user.get(r["id"], [])} for r in users]
 
@@ -112,8 +116,15 @@ def list_users() -> list[dict]:
 def add_user(user_id: int, name: str = "") -> None:
     now = int(time.time())
     with conn() as c:
-        c.execute("INSERT OR IGNORE INTO users(id,name,first_seen,last_seen) VALUES(?,?,?,?)",
+        c.execute("INSERT OR IGNORE INTO users(id,note,first_seen,last_seen) VALUES(?,?,?,?)",
                   (user_id, name.strip()[:120], now, now))
+
+
+def set_telegram_profile(user_id: int, name: str, username: str) -> bool:
+    with conn() as c:
+        result = c.execute("UPDATE users SET name=?, username=? WHERE id=?",
+                           (name[:120], username[:64], user_id))
+        return result.rowcount > 0
 
 
 def set_service_access(user_id: int, enabled: bool) -> bool:

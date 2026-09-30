@@ -19,6 +19,7 @@
     .user-head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
     .identity{font-size:18px;font-weight:700}.identity small{display:block;font-size:13px;font-weight:500;color:#aebbd4;margin-top:4px}
     .switch{display:inline-flex;align-items:center;gap:10px;font-weight:600}
+    .user-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.lookup{padding:8px 11px;font-size:13px}
     input[type=checkbox]{width:21px;height:21px;accent-color:#2088ff;cursor:pointer}
     .templates{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;padding-top:16px;border-top:1px solid #34415a}
     .chip{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;background:#111a2b;border-radius:10px;color:#d8e3f7;font-size:14px}
@@ -37,9 +38,9 @@
     <form id="login-form"><input id="password" type="password" autocomplete="current-password" placeholder="Пароль" aria-label="Пароль" required /><button type="submit">Войти</button></form>
   </section>
   <section id="admin-panel" hidden>
-    <div class="panel"><h2>Добавить по Telegram ID</h2><p class="muted">Можно открыть доступ заранее. Уже заходившие в приложение появятся в списке автоматически.</p>
+    <div class="panel"><h2>Добавить по Telegram ID</h2><p class="muted">Имя и @username загружаются через бота, если Telegram разрешает получить этот профиль. После открытия приложения данные обновятся автоматически.</p>
       <form id="add-form"><input id="new-id" type="text" inputmode="numeric" pattern="[0-9]+" placeholder="Telegram ID" aria-label="Telegram ID" required />
-        <input id="new-name" type="text" maxlength="120" placeholder="Имя или пометка (необязательно)" aria-label="Имя или пометка" />
+        <input id="new-name" type="text" maxlength="120" placeholder="Ваша пометка (необязательно)" aria-label="Ваша пометка" />
         <button type="submit">Добавить</button></form>
     </div>
     <div class="toolbar"><h2>Пользователи <span id="count" class="muted"></span></h2><input id="search" type="search" placeholder="Поиск по ID или имени" aria-label="Поиск пользователей" /></div>
@@ -74,7 +75,7 @@
   }
   function render() {
     const search = $('search').value.trim().toLowerCase();
-    const visible = users.filter(u => [String(u.id), u.name, u.username].some(s => (s || '').toLowerCase().includes(search)));
+    const visible = users.filter(u => [String(u.id), u.name, u.username, u.note].some(s => (s || '').toLowerCase().includes(search)));
     $('count').textContent = `(${visible.length} из ${users.length})`;
     const root = $('users'); root.replaceChildren();
     if (!visible.length) { const empty = document.createElement('p'); empty.textContent = 'Пользователей пока нет'; root.append(empty); return; }
@@ -82,15 +83,24 @@
       const card = document.createElement('div'); card.className = 'user';
       const head = document.createElement('div'); head.className = 'user-head';
       const identity = document.createElement('div'); identity.className = 'identity';
-      identity.textContent = user.name || user.username || 'Пользователь';
+      identity.textContent = user.note || user.name || (user.username ? '@' + user.username : 'Имя неизвестно');
       const meta = document.createElement('small');
-      meta.textContent = `ID ${user.id}${user.username ? ' · @' + user.username : ''} · заходил ${new Date(user.last_seen * 1000).toLocaleString('ru-RU')}`;
+      meta.textContent = `Telegram: ${user.name || 'имя неизвестно'}${user.username ? ' · @' + user.username : ''} · ID ${user.id}`;
       identity.append(meta); head.append(identity);
+      const actions = document.createElement('div'); actions.className = 'user-actions';
+      const lookup = document.createElement('button'); lookup.type = 'button'; lookup.className = 'secondary lookup'; lookup.textContent = 'Обновить имя';
+      lookup.addEventListener('click', async () => {
+        lookup.disabled = true;
+        try { await request(`users/${user.id}/lookup`, {method:'POST'}); await refresh(); notice('Имя обновлено из Telegram'); }
+        catch (error) { notice(error.message, true); }
+        finally { lookup.disabled = false; }
+      });
+      actions.append(lookup);
       const service = checkbox('Доступ к сервису', user.service_access, async enabled => {
         await request(`users/${user.id}/service`, {method:'PUT',body:JSON.stringify({enabled})});
         user.service_access = enabled;
       }, 'switch');
-      head.append(service); card.append(head);
+      actions.append(service); head.append(actions); card.append(head);
       const grants = document.createElement('div'); grants.className = 'templates';
       for (const template of templates) {
         grants.append(checkbox(template.title, user.templates.includes(template.id), async enabled => {
@@ -125,9 +135,9 @@
   $('add-form').addEventListener('submit', async event => {
     event.preventDefault();
     try {
-      await request('users', {method:'POST',body:JSON.stringify({id:Number($('new-id').value),name:$('new-name').value})});
+      const result = await request('users', {method:'POST',body:JSON.stringify({id:Number($('new-id').value),name:$('new-name').value})});
       $('new-id').value = ''; $('new-name').value = '';
-      await refresh(); notice('Пользователь добавлен');
+      await refresh(); notice(result.profile_found ? 'Пользователь добавлен, имя получено из Telegram' : 'Пользователь добавлен. Имя появится после открытия бота или приложения');
     } catch (error) { notice(error.message, true); }
   });
   $('logout').addEventListener('click', async () => {

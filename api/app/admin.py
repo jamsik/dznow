@@ -14,6 +14,7 @@ from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
 from . import db
+from .telegram_profile import lookup
 from .templates import TEMPLATE_LAYOUTS
 
 router = APIRouter(prefix="/dzadmin")
@@ -173,6 +174,21 @@ def users(request: Request, response: Response):
 def create_user(payload: NewUser, request: Request, x_admin_csrf: str = Header("")):
     _require_write(request, x_admin_csrf)
     db.add_user(payload.id, payload.name)
+    profile = lookup(payload.id)
+    if profile:
+        db.set_telegram_profile(payload.id, *profile)
+    return {"ok": True, "profile_found": bool(profile)}
+
+
+@router.post("/api/users/{user_id}/lookup")
+def lookup_user(user_id: int, request: Request, x_admin_csrf: str = Header("")):
+    _require_write(request, x_admin_csrf)
+    if user_id <= 0 or not any(user["id"] == user_id for user in db.list_users()):
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+    profile = lookup(user_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Telegram не вернул имя. Попросите пользователя открыть бота или приложение")
+    db.set_telegram_profile(user_id, *profile)
     return {"ok": True}
 
 

@@ -13,8 +13,9 @@ from app import db
 from app.main import app
 
 
-def signed_headers(user_id):
-    pairs = {"auth_date": "1790672400", "user": json.dumps({"id": user_id, "first_name": "Тест"}, ensure_ascii=False)}
+def signed_headers(user_id, first_name="Тест", username=""):
+    pairs = {"auth_date": "1790672400", "user": json.dumps({"id": user_id, "first_name": first_name,
+                                                         "username": username}, ensure_ascii=False)}
     check = "\n".join(f"{key}={pairs[key]}" for key in sorted(pairs))
     secret = hmac.new(b"WebAppData", b"test-token", hashlib.sha256).digest()
     pairs["hash"] = hmac.new(secret, check.encode(), hashlib.sha256).hexdigest()
@@ -96,6 +97,21 @@ class AccessTests(unittest.TestCase):
         headers["X-Telegram-Init-Data"] = headers["X-Telegram-Init-Data"].replace("54321", "12345")
         self.assertEqual(self.client.get("/api/catalog", headers=headers).status_code, 401)
 
+    def test_signed_telegram_profile_appears_in_admin_list(self):
+        self.client.get("/api/me", headers=signed_headers(12345, "Анна", "anna_test"))
+        user = db.list_users()[0]
+        self.assertEqual((user["name"], user["username"]), ("Анна", "anna_test"))
+
+    def test_existing_user_records_gain_separate_note_without_losing_access(self):
+        self.grant(12345, "samolet")
+        with db.conn() as connection:
+            connection.execute("ALTER TABLE users DROP COLUMN note")
+        db.init()
+        user = db.list_users()[0]
+        self.assertEqual(user["note"], "")
+        self.assertTrue(user["service_access"])
+        self.assertEqual(user["templates"], ["samolet"])
+
     def test_admin_login_add_and_toggle(self):
         self.assertEqual(self.client.get("/dzadmin/api/users").status_code, 401)
         self.assertEqual(self.client.post("/dzadmin/api/login", json={"password": "wrong"}).status_code, 401)
@@ -103,12 +119,24 @@ class AccessTests(unittest.TestCase):
         csrf = self.client.get("/dzadmin/api/session").json()["csrf"]
         self.assertEqual(self.client.post("/dzadmin/api/users", json={"id": 12345}).status_code, 403)
         headers = {"X-Admin-CSRF": csrf, "Origin": "http://testserver"}
-        self.assertEqual(self.client.post("/dzadmin/api/users", json={"id": 12345, "name": "Тест"}, headers=headers).status_code, 200)
+        with patch("app.admin.lookup", return_value=("Анна", "anna_test")):
+            added = self.client.post("/dzadmin/api/users", json={"id": 12345, "name": "Мой клиент"}, headers=headers)
+        self.assertEqual(added.status_code, 200)
+        self.assertTrue(added.json()["profile_found"])
         self.assertEqual(self.client.put("/dzadmin/api/users/12345/service", json={"enabled": True}, headers=headers).status_code, 200)
         self.assertEqual(self.client.put("/dzadmin/api/users/12345/templates/samolet", json={"enabled": True}, headers=headers).status_code, 200)
         users = self.client.get("/dzadmin/api/users").json()["users"]
         self.assertEqual(users[0]["templates"], ["samolet"])
         self.assertTrue(users[0]["service_access"])
+        self.assertEqual((users[0]["note"], users[0]["name"], users[0]["username"]),
+                         ("Мой клиент", "Анна", "anna_test"))
+        with patch("app.admin.lookup", return_value=("Анна Новая", "anna_new")):
+            self.assertEqual(self.client.post("/dzadmin/api/users/12345/lookup", headers=headers).status_code, 200)
+        refreshed = self.client.get("/dzadmin/api/users").json()["users"][0]
+        self.assertEqual((refreshed["name"], refreshed["username"], refreshed["note"]),
+                         ("Анна Новая", "anna_new", "Мой клиент"))
+        with patch("app.admin.lookup", return_value=None):
+            self.assertEqual(self.client.post("/dzadmin/api/users/12345/lookup", headers=headers).status_code, 404)
         self.assertEqual(self.client.put("/dzadmin/api/users/12345/service", json={"enabled": False},
                                          headers={**headers, "Origin": "https://evil.example"}).status_code, 403)
         self.assertEqual(self.client.post("/dzadmin/api/logout", headers=headers).status_code, 200)
