@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>DZNOW · Админка</title>
+  <style nonce="__CSP_NONCE__">
+    :root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#eaf0ff;background:#101626}
+    *{box-sizing:border-box} body{margin:0;min-height:100vh;padding:36px 20px}
+    main{max-width:1080px;margin:auto} h1{font-size:30px;margin:0 0 8px} h2{font-size:20px;margin:0 0 12px}
+    p{color:#aebbd4;line-height:1.5} .top{display:flex;align-items:start;justify-content:space-between;gap:20px;margin-bottom:30px}
+    .panel{background:#1c263a;border:1px solid #34415a;border-radius:18px;padding:22px;margin:18px 0}
+    input[type=text],input[type=password],input[type=search]{background:#111a2b;border:1px solid #53617a;border-radius:10px;color:#fff;padding:12px 14px;font:inherit;min-width:0}
+    input:focus-visible,button:focus-visible{outline:2px solid #6da9ff;outline-offset:2px}
+    button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:11px 16px;background:#1980f9;color:#fff;font-weight:650}
+    button.secondary{background:#303d55} button:disabled{opacity:.55;cursor:wait}
+    form{display:flex;gap:10px;flex-wrap:wrap;align-items:center} form input{flex:1 1 180px}
+    .users{display:grid;gap:12px}.user{background:#1c263a;border:1px solid #34415a;border-radius:16px;padding:18px}
+    .user-head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+    .identity{font-size:18px;font-weight:700}.identity small{display:block;font-size:13px;font-weight:500;color:#aebbd4;margin-top:4px}
+    .switch{display:inline-flex;align-items:center;gap:10px;font-weight:600}
+    input[type=checkbox]{width:21px;height:21px;accent-color:#2088ff;cursor:pointer}
+    .templates{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;padding-top:16px;border-top:1px solid #34415a}
+    .chip{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;background:#111a2b;border-radius:10px;color:#d8e3f7;font-size:14px}
+    .toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+    #search{width:min(360px,100%)} .muted{color:#aebbd4;font-size:13px}.error{color:#ffadb2}.ok{color:#99e5ba}
+    #notice{min-height:24px;margin:10px 0} [hidden]{display:none!important}
+    @media(max-width:600px){body{padding:22px 12px}.panel{padding:16px}.top{align-items:center}.templates{display:grid;grid-template-columns:1fr 1fr}.chip{font-size:13px}}
+  </style>
+</head>
+<body>
+<main>
+  <div class="top"><div><h1>DZNOW · Админка</h1><p>Доступ к сервису и шаблонам</p></div><button id="logout" class="secondary" hidden>Выйти</button></div>
+  <div id="notice" role="status" aria-live="polite"></div>
+  <section id="login-panel" class="panel" hidden>
+    <h2>Вход администратора</h2>
+    <form id="login-form"><input id="password" type="password" autocomplete="current-password" placeholder="Пароль" aria-label="Пароль" required /><button type="submit">Войти</button></form>
+  </section>
+  <section id="admin-panel" hidden>
+    <div class="panel"><h2>Добавить по Telegram ID</h2><p class="muted">Можно открыть доступ заранее. Уже заходившие в приложение появятся в списке автоматически.</p>
+      <form id="add-form"><input id="new-id" type="text" inputmode="numeric" pattern="[0-9]+" placeholder="Telegram ID" aria-label="Telegram ID" required />
+        <input id="new-name" type="text" maxlength="120" placeholder="Имя или пометка (необязательно)" aria-label="Имя или пометка" />
+        <button type="submit">Добавить</button></form>
+    </div>
+    <div class="toolbar"><h2>Пользователи <span id="count" class="muted"></span></h2><input id="search" type="search" placeholder="Поиск по ID или имени" aria-label="Поиск пользователей" /></div>
+    <p class="muted">Шаблон работает только при включённом доступе к сервису. Изменения применяются сразу.</p>
+    <div id="users" class="users"></div>
+  </section>
+</main>
+<script nonce="__CSP_NONCE__">
+(() => {
+  const $ = id => document.getElementById(id);
+  let csrf = null, users = [], templates = [];
+  const notice = (message, error = false) => { $('notice').textContent = message; $('notice').className = error ? 'error' : 'ok'; };
+  async function request(path, options = {}) {
+    const response = await fetch('/dzadmin/api/' + path, {
+      credentials: 'same-origin',
+      ...options,
+      headers: {'Content-Type':'application/json', ...(csrf ? {'X-Admin-CSRF':csrf} : {}), ...(options.headers || {})}
+    });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.detail || 'Ошибка сервера');
+    return body;
+  }
+  function show(loggedIn) {
+    $('login-panel').hidden = loggedIn;
+    $('admin-panel').hidden = !loggedIn;
+    $('logout').hidden = !loggedIn;
+  }
+  async function refresh() {
+    const result = await request('users');
+    users = result.users; templates = result.templates;
+    render();
+  }
+  function render() {
+    const search = $('search').value.trim().toLowerCase();
+    const visible = users.filter(u => [String(u.id), u.name, u.username].some(s => (s || '').toLowerCase().includes(search)));
+    $('count').textContent = `(${visible.length} из ${users.length})`;
+    const root = $('users'); root.replaceChildren();
+    if (!visible.length) { const empty = document.createElement('p'); empty.textContent = 'Пользователей пока нет'; root.append(empty); return; }
+    for (const user of visible) {
+      const card = document.createElement('div'); card.className = 'user';
+      const head = document.createElement('div'); head.className = 'user-head';
+      const identity = document.createElement('div'); identity.className = 'identity';
+      identity.textContent = user.name || user.username || 'Пользователь';
+      const meta = document.createElement('small');
+      meta.textContent = `ID ${user.id}${user.username ? ' · @' + user.username : ''} · заходил ${new Date(user.last_seen * 1000).toLocaleString('ru-RU')}`;
+      identity.append(meta); head.append(identity);
+      const service = checkbox('Доступ к сервису', user.service_access, async enabled => {
+        await request(`users/${user.id}/service`, {method:'PUT',body:JSON.stringify({enabled})});
+        user.service_access = enabled;
+      }, 'switch');
+      head.append(service); card.append(head);
+      const grants = document.createElement('div'); grants.className = 'templates';
+      for (const template of templates) {
+        grants.append(checkbox(template.title, user.templates.includes(template.id), async enabled => {
+          await request(`users/${user.id}/templates/${template.id}`, {method:'PUT',body:JSON.stringify({enabled})});
+          user.templates = enabled ? [...user.templates, template.id] : user.templates.filter(id => id !== template.id);
+        }, 'chip'));
+      }
+      card.append(grants); root.append(card);
+    }
+  }
+  function checkbox(title, checked, save, className) {
+    const label = document.createElement('label'); label.className = className;
+    const input = document.createElement('input'); input.type = 'checkbox'; input.checked = checked;
+    input.addEventListener('change', async () => {
+      input.disabled = true;
+      try { await save(input.checked); notice('Сохранено'); }
+      catch (error) { input.checked = !input.checked; notice(error.message, true); }
+      finally { input.disabled = false; }
+    });
+    label.append(input, document.createTextNode(title));
+    return label;
+  }
+  $('login-form').addEventListener('submit', async event => {
+    event.preventDefault();
+    try {
+      await request('login', {method:'POST',body:JSON.stringify({password:$('password').value})});
+      $('password').value = '';
+      const state = await request('session'); csrf = state.csrf;
+      show(true); await refresh(); notice('Вход выполнен');
+    } catch (error) { notice(error.message, true); }
+  });
+  $('add-form').addEventListener('submit', async event => {
+    event.preventDefault();
+    try {
+      await request('users', {method:'POST',body:JSON.stringify({id:Number($('new-id').value),name:$('new-name').value})});
+      $('new-id').value = ''; $('new-name').value = '';
+      await refresh(); notice('Пользователь добавлен');
+    } catch (error) { notice(error.message, true); }
+  });
+  $('logout').addEventListener('click', async () => {
+    try { await request('logout', {method:'POST'}); csrf = null; show(false); notice('Вы вышли'); }
+    catch (error) { notice(error.message, true); }
+  });
+  $('search').addEventListener('input', render);
+  request('session').then(async state => {
+    if (!state.configured) { notice('На сервере не задан пароль администратора. Укажите DZADMIN_PASSWORD и DZADMIN_SESSION_SECRET.', true); return; }
+    csrf = state.csrf; show(state.logged_in);
+    if (state.logged_in) await refresh();
+  }).catch(error => notice(error.message, true));
+})();
+</script>
+</body>
+</html>

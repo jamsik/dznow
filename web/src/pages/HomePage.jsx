@@ -3,7 +3,7 @@ import { ScenarioHero, ScenarioTile } from "../components/ScenarioCard";
 import TemplateCard from "../components/TemplateCard";
 import StoryPreview from "../components/StoryPreview";
 import Icon from "../components/icons";
-import { SCENARIOS, TEMPLATES, BASE_DRAFT } from "../data/catalog";
+import { SCENARIOS, BASE_DRAFT, draftForLayout } from "../data/catalog";
 import { relTime, short } from "../lib/format";
 
 const previewFor = id =>
@@ -11,8 +11,8 @@ const previewFor = id =>
   : id === "mortgage" || id === "digest" ? { ...BASE_DRAFT, skin: "light" }
   : BASE_DRAFT;
 
-export default function HomePage({ category, setCategory, projects, onScenario, onTemplate, onOpen, go, onSoon }) {
-  const [hero, ...rest] = SCENARIOS;
+export default function HomePage({ category, setCategory, projects, templates, allowedTemplates, onScenario, onTemplate, onOpen, go, onSoon }) {
+  const [hero, ...rest] = SCENARIOS.filter(s => !s.ready || allowedTemplates.includes(s.id));
   const recent = projects.slice(0, 2);
 
   return (
@@ -24,7 +24,7 @@ export default function HomePage({ category, setCategory, projects, onScenario, 
 
       <div className="h2">Что нужно сделать?</div>
       <div className="scenarios">
-        <ScenarioHero scenario={hero} data={previewFor(hero.id)} onClick={() => onScenario(hero)} />
+        {hero && <ScenarioHero scenario={hero} data={previewFor(hero.id)} onClick={() => hero.ready ? onScenario(hero) : onSoon()} />}
         <div className="sc-pair">
           {rest.map(s => (
             <ScenarioTile key={s.id} scenario={s} data={previewFor(s.id)}
@@ -33,10 +33,12 @@ export default function HomePage({ category, setCategory, projects, onScenario, 
         </div>
       </div>
 
+      {!templates.length && <div className="empty">Администратор пока не открыл вам шаблоны</div>}
+
       <div className="h2">Популярные шаблоны</div>
       <div className="tscroll">
-        {TEMPLATES.map(t => (
-          <TemplateCard key={t.id} template={t} data={{ ...BASE_DRAFT, skin: t.skin }}
+        {templates.map(t => (
+          <TemplateCard key={t.id} template={t} data={{ ...draftForLayout(t.layout), skin: t.skin }}
                         onClick={() => onTemplate(t)} />
         ))}
       </div>

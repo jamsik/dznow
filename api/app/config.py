@@ -23,6 +23,7 @@ RENDER_URL = os.environ.get("RENDER_URL", "http://127.0.0.1:5173/render.html")
 DATA_DIR = Path(os.environ.get("DATA_DIR", ROOT_DIR / "data")).resolve()
 FILES_DIR = DATA_DIR / "files"
 DB_PATH = DATA_DIR / "dznow.db"
+SAMOLET_FONT_DIR = Path(os.environ.get("SAMOLET_FONT_DIR") or DATA_DIR / "samolet-fonts").resolve()
 
 # Собранный фронт. В деве его нет — там работает Vite на :5173, и приложение
 # раздаёт только API. В контейнере `npm run build` кладёт файлы сюда, и тот же

@@ -58,7 +58,23 @@ const t0 = performance.now();
 window.__DZNOW_TIMING = {};
 const mark = k => () => { window.__DZNOW_TIMING[k] = Math.round(performance.now() - t0); };
 
-const fonts = (document.fonts?.ready || Promise.resolve()).then(mark("fonts"), mark("fonts"));
+async function payloadFontsReady() {
+  const entries = Object.entries(payload.fonts || {});
+  if (entries.length) {
+    const style = document.createElement("style");
+    style.textContent = entries.map(([weight, encoded]) =>
+      `@font-face{font-family:"CoFo Sans";src:url("data:font/woff2;base64,${encoded}") format("woff2");font-style:normal;font-weight:${weight};font-display:block}`
+    ).join("\n");
+    document.head.append(style);
+    await Promise.all(entries.map(([weight]) => document.fonts.load(`${weight} 16px "CoFo Sans"`, "ЖК 123")));
+  }
+  await (document.fonts?.ready || Promise.resolve());
+}
+
+const fonts = payloadFontsReady().then(mark("fonts"), error => {
+  window.__DZNOW_ERROR = `Не удалось загрузить фирменный шрифт: ${error.message}`;
+  throw error;
+});
 
 // Два кадра: первый отдаёт React разметку, во втором в DOM уже есть <img>,
 // которые можно дождаться.
@@ -66,8 +82,14 @@ requestAnimationFrame(() => requestAnimationFrame(() => {
   const images = imagesReady().then(mark("images"), mark("images"));
   Promise.all([fonts, images])
     .then(() => setTimeout(done, 60))
-    .catch(() => setTimeout(done, 60));
+    .catch(() => { if (!window.__DZNOW_ERROR) setTimeout(done, 60); });
 }));
 
 // Страховка: что-то не догрузилось — лучше снять кадр, чем висеть до таймаута.
-setTimeout(done, 12000);
+setTimeout(() => {
+  if (payload.layout === "samolet" && !window.__DZNOW_READY) {
+    window.__DZNOW_ERROR ||= "Фирменный шрифт не загрузился вовремя";
+  } else {
+    done();
+  }
+}, 12000);

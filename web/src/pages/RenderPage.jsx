@@ -28,6 +28,7 @@ export default function RenderPage({ draft, layout, work, onDone }) {
   // error в замыкании финального таймера был бы старым: ref всегда свежий
   const errorRef = useRef(null);
   errorRef.current = error;
+  const deniedRef = useRef(false);
 
   useEffect(() => {
     if (started.current) return;
@@ -40,6 +41,7 @@ export default function RenderPage({ draft, layout, work, onDone }) {
       .then(url => { result.current = url; })
       .catch(err => {
         const text = err?.message || String(err);
+        deniedRef.current = err?.status === 401 || err?.status === 403;
         logError("рендер не удался", text);
         setError(text);
       })
@@ -58,7 +60,7 @@ export default function RenderPage({ draft, layout, work, onDone }) {
 
   useEffect(() => {
     if (step < STEPS.length || !ready) return;
-    const t = setTimeout(() => doneRef.current(result.current, errorRef.current), 380);
+    const t = setTimeout(() => doneRef.current(result.current, errorRef.current, deniedRef.current), 380);
     return () => clearTimeout(t);
   }, [step, ready]);
 
@@ -93,7 +95,7 @@ export default function RenderPage({ draft, layout, work, onDone }) {
       </div>
 
       {waiting && slow && (
-        <button className="btn line" onClick={() => doneRef.current(result.current)}>
+        <button className="btn line" onClick={() => doneRef.current(result.current, errorRef.current, deniedRef.current)}>
           Показать результат
         </button>
       )}

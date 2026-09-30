@@ -6,7 +6,7 @@ import { saveImage } from "../lib/download";
 import { haptic } from "../lib/telegram";
 import { logError } from "../lib/log";
 
-export default function ResultPage({ project, format, setFormat, fileUrl, error, onEdit, onAgain, onSheet }) {
+export default function ResultPage({ project, format, setFormat, fileUrl, error, denied, onEdit, onAgain, onSheet }) {
   const [playing, setPlaying] = useState(false);
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(null);
@@ -103,8 +103,10 @@ export default function ResultPage({ project, format, setFormat, fileUrl, error,
         <div className="warnbar">
           <b>Сервер файл не собрал.</b> {error}
           <br />
-          «Скачать» соберёт картинку прямо в браузере — получится тот же макет,
-          но качество ниже и мелкие детали могут съехать.
+          {denied ? "Доступ изменён администратором. Вернитесь в приложение после обновления доступа."
+            : project.layout === "samolet"
+            ? "Вернитесь в редактор и повторите создание файла."
+            : "«Скачать» соберёт картинку прямо в браузере — получится тот же макет, но качество ниже и мелкие детали могут съехать."}
         </div>
       )}
 
@@ -120,7 +122,7 @@ export default function ResultPage({ project, format, setFormat, fileUrl, error,
       </div>
 
       <div className="result-actions">
-        <button className="btn primary" onClick={download} disabled={busy}>
+        <button className="btn primary" onClick={download} disabled={busy || denied || (project.layout === "samolet" && !fileUrl)}>
           <Icon name="download" /> {busy ? "Сохраняю…" : "Скачать"}
         </button>
         {saved && <div className="savednote">{saved}</div>}

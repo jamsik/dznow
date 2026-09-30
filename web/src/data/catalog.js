@@ -1,5 +1,5 @@
 // Каталог: категории, сценарии («что нужно сделать») и шаблоны.
-// В проде приходит из GET /api/catalog и фильтруется по доступам агентства.
+// GET /api/catalog возвращает доступные текущему пользователю макеты.
 export const CATEGORIES = [
   { id: "realty",   title: "Недвижимость", ready: true  },
   { id: "auto",     title: "Авто",         ready: false },
@@ -17,7 +17,8 @@ export const SCENARIOS = [
 export const TEMPLATES = [
   { id: "object", title: "Карточка объекта", kind: "Story", motion: true,  layout: "card",   skin: "dark"   },
   { id: "figure", title: "Крупная цифра",    kind: "Reel",  motion: true,  layout: "figure", skin: "accent" },
-  { id: "light",  title: "Светлая карточка", kind: "Story", motion: false, layout: "card",   skin: "light"  }
+  { id: "light",  title: "Светлая карточка", kind: "Story", motion: false, layout: "card",   skin: "light"  },
+  { id: "samolet", title: "Самолет · персональный", kind: "Story", motion: true, layout: "samolet", private: true }
 ];
 
 // Значения по умолчанию для схемы realty.flat.v1
@@ -73,6 +74,7 @@ export const BASE_DRAFT = {
  * в редакторе этот переключатель просто не появится.
  */
 export const LAYOUT_BLOCKS = {
+  samolet: ["logo", "agency", "tag", "author", "phone", "contacts"],
   card:   ["logo", "agency", "tag", "author", "phone", "contacts"],
   figure: ["logo", "agency", "tag", "author", "phone"]
 };
@@ -85,3 +87,19 @@ export const BLOCK_TITLES = {
   phone:    "Телефон",
   contacts: "Доп. контакты"
 };
+
+export const SAMOLET_DRAFT = {
+  ...BASE_DRAFT,
+  complex: "ЖК «Улаан-Хото»",
+  district: "на Ключевской",
+  fontId: "onest",
+  palette: { bg: "#0783FA", brand: "#FFFFFF", dim: "#FFFFFF" },
+  walkShop: "10 мин. пешком до Абсолюта",
+  walkSchool: "20 мин. пешком до школы",
+  walkKindergarten: "15 мин. пешком до детского сада"
+};
+
+export const draftForLayout = layout => ({ ...(layout === "samolet" ? SAMOLET_DRAFT : BASE_DRAFT) });
+export const scenarioForLayout = layout => layout === "samolet"
+  ? { id: "samolet", layout: "samolet", title: "Самолет · персональный", ready: true }
+  : SCENARIOS.find(s => s.layout === layout) || SCENARIOS[0];

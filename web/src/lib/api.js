@@ -85,9 +85,21 @@ async function call(path, options = {}) {
 }
 
 export const api = {
+  async catalog() {
+    if (isMock) return { templates: ["object", "figure", "light"] };
+    return call("/catalog");
+  },
+  async samoletFont(weight) {
+    if (isMock) throw new Error("Фирменный шрифт доступен только с сервером");
+    const response = await fetch(`${BASE}/templates/samolet/fonts/${weight}`, {
+      headers: { "X-Telegram-Init-Data": initDataRaw() }
+    });
+    if (!response.ok) throw new Error(`Не удалось загрузить фирменный шрифт (${response.status})`);
+    return response.blob();
+  },
   // Профиль и бренд живут на устройстве (lib/profile.js), пока нет сервера.
   async me() {
-    if (isMock) return null;
+    if (isMock) return { service_access: true };
     return call("/me");
   },
 
@@ -115,8 +127,9 @@ export const api = {
    * Серверный рендер. Возвращает { url, format }.
    * В моке возвращает null — экран результата тогда отдаёт клиентский PNG.
    */
-  async render({ data, layout, format, brand }) {
+  async render({ data, layout, templateId, format, brand }) {
     if (isMock) return null;
-    return call("/render", { method: "POST", body: JSON.stringify({ data, layout, format, brand }) });
+    return call("/render", { method: "POST", body: JSON.stringify({ data, layout, format, brand,
+      template_id: templateId }) });
   }
 };

@@ -151,6 +151,42 @@
 .story.lay-figure .row .v{margin-left:auto;font-weight:700;font-variant-numeric:tabular-nums}
 
 /* animation */
+/* Персональная карточка: пропорции образца 720×1280 на полотне 1080×1920. */
+.story.lay-samolet{padding:94px 99px 114px;font-family:"CoFo Sans",sans-serif}
+.story.lay-samolet::after{display:none}
+.sm-head{display:flex;align-items:flex-start;justify-content:space-between;gap:30px;min-height:112px;flex:none}
+.sm-tag{font-size:calc(34px * var(--ts,1));font-weight:600;max-width:50%;padding-top:14px;overflow-wrap:anywhere}
+.sm-brand{max-width:48%;margin-left:auto}
+.sm-agency{font-size:40px;font-weight:700;line-height:1.1;overflow-wrap:anywhere}
+.sm-logo{height:48px;max-width:330px;object-fit:contain;object-position:right center}
+.sm-location{display:flex;align-items:center;gap:10px;font-size:calc(37px * var(--ts,1));font-weight:600;line-height:1.2;margin-top:10px}
+.sm-location svg{width:38px;height:44px;flex:none}
+.sm-plan{height:535px;flex:none;margin:22px 0 42px;overflow:hidden;padding:0 130px}
+.sm-plan img{width:100%;height:100%;object-fit:contain;display:block}
+.sm-title{font-family:var(--display),sans-serif;font-size:54px;line-height:1.04;font-weight:750;overflow-wrap:anywhere}
+.sm-price{display:flex;align-items:baseline;justify-content:space-between;gap:20px;margin-top:22px}
+.sm-total{font-size:54px;font-weight:750;line-height:1.1;white-space:nowrap}
+.sm-meter{font-size:calc(39px * var(--ts,1));white-space:nowrap}
+.sm-walk{display:grid;gap:7px;margin-top:34px}
+.sm-walk>div{display:flex;align-items:center;gap:28px;font-size:calc(41px * var(--ts,1));line-height:1.3}
+.sm-walk img{width:54px;height:54px;object-fit:contain;flex:none}
+.sm-mortgage{display:flex;align-items:center;justify-content:space-between;gap:26px;margin-top:32px;font-size:calc(34px * var(--ts,1));line-height:1.2}
+.sm-payment{font-size:54px;font-weight:750;line-height:1.1}
+.sm-terms{width:419px}
+.sm-facts{display:grid;grid-template-columns:1fr 1fr;gap:27px 44px;margin-top:39px}
+.sm-fact{display:flex;align-items:center;gap:30px;border-radius:26px;background:var(--brand);color:var(--bg);padding:30px 34px;min-height:156px;min-width:0}
+.sm-fact-icon{width:90px;height:90px;object-fit:contain;flex:none}
+.sm-label{font-size:calc(29px * var(--ts,1));font-weight:600;line-height:1.2}
+.sm-value{font-size:calc(39px * var(--ts,1));font-weight:750;line-height:1.15;margin-top:9px;overflow-wrap:anywhere}
+.story.lay-samolet .s-signature{margin-top:36px}
+.story.lay-samolet .s-foot{font-size:calc(40px * var(--ts,1));align-items:flex-start;gap:30px}
+.story.lay-samolet .s-foot .who{max-width:49%;overflow-wrap:anywhere}
+.story.lay-samolet .s-foot .tel{color:var(--fg);font-family:inherit;font-weight:650;white-space:nowrap}
+.story.lay-samolet .s-contacts{color:var(--fg);font-family:inherit}
+.story.no-plan.lay-samolet .sm-title{margin-top:70px}
+.story.no-plan.lay-samolet .sm-mortgage{margin-top:auto}
+
+/* animation */
 @keyframes s-rise{from{opacity:0;transform:translateY(38px)}to{opacity:1;transform:none}}
 @keyframes s-pop{from{opacity:0;transform:scale(.86)}to{opacity:1;transform:none}}
 @keyframes s-draw{from{stroke-dashoffset:var(--len)}to{stroke-dashoffset:0}}

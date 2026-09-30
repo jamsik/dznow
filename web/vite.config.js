@@ -25,6 +25,7 @@ export default defineConfig({
     host: true,
     proxy: {
       "/api": "http://127.0.0.1:8010",
+      "/dzadmin": "http://127.0.0.1:8010",
       "/files": "http://127.0.0.1:8010"
     }
   }

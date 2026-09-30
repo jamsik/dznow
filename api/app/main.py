@@ -1,4 +1,5 @@
 import asyncio
+import base64
 import contextlib
 import hashlib
 import mimetypes
@@ -11,10 +12,11 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from . import db
+from . import admin, db
 from .auth import validate
-from .config import DATA_DIR, DIST_DIR, FILES_DIR
+from .config import ALLOW_DEV_NO_AUTH, DATA_DIR, DIST_DIR, FILES_DIR
 from .render import render_png, shutdown
+from .templates import FONT_FILES, PRIVATE_LAYOUT, allowed_templates, font_path, require_template
 
 app = FastAPI(title="DZNOW API", version="0.1.0")
 
@@ -25,6 +27,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.include_router(admin.router)
 
 AGENCY = {"name": "Дом и Ключ", "mark": "ДК", "color": "#1F4B3F"}
 FILE_CLEANUP_INTERVAL = 6 * 60 * 60
@@ -40,6 +43,7 @@ class Project(BaseModel):
     layout: str
     at: int
     data: dict
+    template_id: str | None = None
 
 
 class RenderRequest(BaseModel):
@@ -47,12 +51,18 @@ class RenderRequest(BaseModel):
     layout: str
     format: str = "png"
     brand: dict | None = None   # подпись и логотип из профиля
+    template_id: str | None = None
 
 
-def current_user(init_data: str):
+def current_user(init_data: str, require_access: bool = True):
     user = validate(init_data)
     if not user:
         raise HTTPException(status_code=401, detail="Требуется вход через Telegram")
+    if user["id"] == 0 and ALLOW_DEV_NO_AUTH:
+        return user
+    allowed = db.touch_user(user)
+    if require_access and not allowed:
+        raise HTTPException(status_code=403, detail="Доступ к сервису пока не открыт. Сообщите администратору свой Telegram ID.")
     return user
 
 
@@ -118,26 +128,45 @@ def health():
 
 @app.get("/api/me")
 def me(x_telegram_init_data: str = Header("")):
-    user = current_user(x_telegram_init_data)
+    user = current_user(x_telegram_init_data, require_access=False)
     # TODO: агентство и тема приезжают из таблицы tenants, когда появится мультитенантность
-    return {"user": user, "tenant": AGENCY}
+    allowed = user["id"] == 0 and ALLOW_DEV_NO_AUTH or db.touch_user(user)
+    return {"user": user, "tenant": AGENCY, "service_access": allowed}
 
 
 @app.get("/api/projects")
 def projects(x_telegram_init_data: str = Header("")):
     user = current_user(x_telegram_init_data)
-    return db.list_projects(user["id"])
+    permitted = set(allowed_templates(user))
+    return [p for p in db.list_projects(user["id"]) if p["template_id"] in permitted]
+
+
+@app.get("/api/catalog")
+def catalog(x_telegram_init_data: str = Header("")):
+    user = current_user(x_telegram_init_data)
+    return {"templates": allowed_templates(user)}
+
+
+@app.get("/api/templates/samolet/fonts/{weight}")
+def samolet_font(weight: str, x_telegram_init_data: str = Header("")):
+    user = current_user(x_telegram_init_data)
+    require_template(user, "samolet", PRIVATE_LAYOUT)
+    return FileResponse(font_path(weight), media_type="font/woff2", headers={"Cache-Control": "private, max-age=3600"})
 
 
 @app.post("/api/projects")
 def create_project(project: Project, x_telegram_init_data: str = Header("")):
     user = current_user(x_telegram_init_data)
-    return db.save_project(user["id"], project.model_dump())
+    template_id = project.template_id or db.infer_template(project.layout, project.data)
+    require_template(user, template_id, project.layout)
+    return db.save_project(user["id"], {**project.model_dump(), "template_id": template_id})
 
 
 @app.post("/api/render")
 async def render(req: RenderRequest, x_telegram_init_data: str = Header("")):
     user = current_user(x_telegram_init_data)
+    template_id = req.template_id or db.infer_template(req.layout, req.data)
+    require_template(user, template_id, req.layout)
     if req.format != "png":
         # MP4 — следующий шаг: покадровый рендер + ffmpeg, поэтому честный 501,
         # клиент показывает объяснение вместо битой кнопки.
@@ -154,6 +183,11 @@ async def render(req: RenderRequest, x_telegram_init_data: str = Header("")):
             "author": {"name": user["name"], "tel": user.get("tel") or "", "contacts": ""},
         },
     }
+    if req.layout == PRIVATE_LAYOUT:
+        payload["fonts"] = {
+            weight: base64.b64encode(font_path(weight).read_bytes()).decode("ascii")
+            for weight in FONT_FILES
+        }
     started = time.monotonic()
     try:
         name = await render_png(payload)

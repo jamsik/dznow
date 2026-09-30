@@ -21,7 +21,7 @@ const TEXT_SIZES = [
  * Палитра описывается двумя цветами — фон и акцент; остальное выводится,
  * чтобы человек не подбирал восемь оттенков и не ломал читаемость.
  */
-export default function StyleStudio({ draft, onChange, agency }) {
+export default function StyleStudio({ draft, onChange, agency, layout }) {
   const bgInput = useRef(null);
   const current = resolvePalette(draft);
   const isCustom = Boolean(draft.palette);
@@ -134,6 +134,9 @@ export default function StyleStudio({ draft, onChange, agency }) {
 
       <section className="section">
         <h3>Шрифт</h3>
+        {layout === "samolet" ? (
+          <div className="hint">Фирменный CoFo Sans применяется только в этом шаблоне.</div>
+        ) : <>
         <div className="fonts">
           {FONT_SETS.map(f => (
             <button key={f.id} className="font-chip" aria-pressed={(draft.fontId || "unbounded") === f.id}
@@ -146,6 +149,7 @@ export default function StyleStudio({ draft, onChange, agency }) {
             </button>
           ))}
         </div>
+        </>}
       </section>
 
       <section className="section">

@@ -7,7 +7,7 @@ import PlanFit from "../components/PlanFit";
 import StyleStudio from "../components/StyleStudio";
 import PrimaryAction from "../components/PrimaryAction";
 import Icon, { PlayGlyph } from "../components/icons";
-import { FORM_SECTIONS } from "../data/formSchema";
+import { FORM_SECTIONS, SAMOLET_SECTIONS } from "../data/formSchema";
 import { resolvePalette } from "../lib/palette";
 import { cleanPlan, fitImage } from "../lib/planImage";
 import { haptic } from "../lib/telegram";
@@ -93,7 +93,7 @@ export default function EditorPage({ scenario, draft, setDraft, agency, onCreate
 
           {tab === "info" ? (
             <>
-              {FORM_SECTIONS.map(s => (
+              {(scenario.layout === "samolet" ? SAMOLET_SECTIONS : FORM_SECTIONS).map(s => (
                 <FormSection key={s.title} section={s} draft={draft} onChange={change} />
               ))}
 
@@ -116,7 +116,7 @@ export default function EditorPage({ scenario, draft, setDraft, agency, onCreate
             </>
           ) : (
             <>
-              <StyleStudio draft={draft} onChange={patch} agency={agency} />
+              <StyleStudio draft={draft} onChange={patch} agency={agency} layout={scenario.layout} />
 
               <PlanFit draft={draft} onChange={patch} />
 

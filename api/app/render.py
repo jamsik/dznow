@@ -77,7 +77,10 @@ def _shoot(context, payload: dict) -> str:
         t_goto = time.monotonic()
 
         # страница сама сообщает, что шрифты и картинки на месте
-        page.wait_for_function("window.__DZNOW_READY === true", timeout=20000)
+        page.wait_for_function("window.__DZNOW_READY === true || !!window.__DZNOW_ERROR", timeout=20000)
+        error = page.evaluate("window.__DZNOW_ERROR")
+        if error:
+            raise RuntimeError(error)
         t_ready = time.monotonic()
 
         name = f"dznow_{int(time.time() * 1000)}.png"

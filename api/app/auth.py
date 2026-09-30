@@ -49,4 +49,5 @@ def validate(init_data: str):
 
     name = " ".join(filter(None, [user.get("first_name"), user.get("last_name")])) or user.get("username", "")
     initials = "".join(part[0] for part in name.split()[:2]).upper() or "?"
-    return {"id": user["id"], "name": name or "Пользователь", "initials": initials, "tel": None}
+    return {"id": user["id"], "name": name or "Пользователь", "username": user.get("username", ""),
+            "initials": initials, "tel": None}
