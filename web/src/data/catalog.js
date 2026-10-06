@@ -18,7 +18,8 @@ export const TEMPLATES = [
   { id: "object", title: "Карточка объекта", kind: "Story", motion: true,  layout: "card",   skin: "dark"   },
   { id: "figure", title: "Крупная цифра",    kind: "Reel",  motion: true,  layout: "figure", skin: "accent" },
   { id: "light",  title: "Светлая карточка", kind: "Story", motion: false, layout: "card",   skin: "light"  },
-  { id: "samolet", title: "Самолет · персональный", kind: "Story", motion: true, layout: "samolet", private: true }
+  { id: "samolet", title: "Самолет · персональный", kind: "Story", motion: true, layout: "samolet", private: true },
+  { id: "samolet_context", title: "Самолет · планировка и контекст", kind: "Story", motion: true, layout: "samolet_context", private: true }
 ];
 
 // Значения по умолчанию для схемы realty.flat.v1
@@ -75,6 +76,7 @@ export const BASE_DRAFT = {
  */
 export const LAYOUT_BLOCKS = {
   samolet: ["logo", "agency", "tag", "author", "phone", "contacts"],
+  samolet_context: ["logo", "agency", "tag", "author", "phone", "contacts"],
   card:   ["logo", "agency", "tag", "author", "phone", "contacts"],
   figure: ["logo", "agency", "tag", "author", "phone"]
 };
@@ -99,7 +101,21 @@ export const SAMOLET_DRAFT = {
   walkKindergarten: "15 мин. пешком до детского сада"
 };
 
-export const draftForLayout = layout => ({ ...(layout === "samolet" ? SAMOLET_DRAFT : BASE_DRAFT) });
-export const scenarioForLayout = layout => layout === "samolet"
+export const SAMOLET_CONTEXT_DRAFT = {
+  ...SAMOLET_DRAFT,
+  rooms: "3-комнатная",
+  area: 76.5,
+  planMode: "sketch",
+  walkStop: "10 мин. пешком до остановки",
+  walkSchool: "20 мин. пешком до школы",
+  walkKindergarten: "15 мин. пешком до детского сада",
+  insightTitle: "РЕНТГЕН-ВЫВОД",
+  insightText: "Подойдёт семье, если важно, чтобы была школа рядом, спокойный двор и планировка без лишних метров."
+};
+
+export const draftForLayout = layout => ({ ...(layout === "samolet_context" ? SAMOLET_CONTEXT_DRAFT : layout === "samolet" ? SAMOLET_DRAFT : BASE_DRAFT) });
+export const scenarioForLayout = layout => layout === "samolet_context"
+  ? { id: "samolet_context", layout, title: "Самолет · планировка и контекст", ready: true }
+  : layout === "samolet"
   ? { id: "samolet", layout: "samolet", title: "Самолет · персональный", ready: true }
   : SCENARIOS.find(s => s.layout === layout) || SCENARIOS[0];

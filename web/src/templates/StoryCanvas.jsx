@@ -2,11 +2,13 @@ import { forwardRef } from "react";
 import RealtyCard from "./RealtyCard";
 import RealtyFigure from "./RealtyFigure";
 import RealtySamolet from "./RealtySamolet";
+import RealtySamoletContext from "./RealtySamoletContext";
 import { useBrand } from "../lib/brandContext";
 import { resolvePalette, rgba, effectiveDim } from "../lib/palette";
 import { fontSet } from "../data/fonts";
 
-const LAYOUTS = { card: RealtyCard, figure: RealtyFigure, samolet: RealtySamolet };
+const LAYOUTS = { card: RealtyCard, figure: RealtyFigure, samolet: RealtySamolet,
+  samolet_context: RealtySamoletContext };
 const ALL_ON = { logo: true, agency: true, tag: true, author: true, phone: true, contacts: false };
 
 /** Куда уходит плотная часть завесы над фоновой картинкой. */
@@ -38,8 +40,8 @@ const StoryCanvas = forwardRef(function StoryCanvas(
     "--bg": p.bg, "--panel": p.panel, "--fg": p.fg, "--dim": effectiveDim(data, p),
     "--brand": p.brand, "--brand-ink": p.brandInk, "--line-c": p.lineC,
     "--plan-stroke": p.planStroke, "--plan-fill": p.planFill, "--glow": p.glow,
-    "--display": layout === "samolet" ? '"CoFo Sans"' : f.display,
-    "--story-ui": layout === "samolet" ? '"CoFo Sans"' : f.body,
+    "--display": ["samolet", "samolet_context"].includes(layout) ? '"CoFo Sans"' : f.display,
+    "--story-ui": ["samolet", "samolet_context"].includes(layout) ? '"CoFo Sans"' : f.body,
     // Множитель для мелких надписей. Крупные размеры (цена, заголовок) не
     // трогаем: они и так читаются, а рост сломал бы вертикальную вёрстку.
     "--ts": data.textScale ?? 1,

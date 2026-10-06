@@ -134,7 +134,7 @@ export default function StyleStudio({ draft, onChange, agency, layout }) {
 
       <section className="section">
         <h3>Шрифт</h3>
-        {layout === "samolet" ? (
+        {["samolet", "samolet_context"].includes(layout) ? (
           <div className="hint">Фирменный CoFo Sans применяется только в этом шаблоне.</div>
         ) : <>
         <div className="fonts">

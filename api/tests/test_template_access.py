@@ -91,6 +91,22 @@ class AccessTests(unittest.TestCase):
                 self.assertEqual(result.status_code, 200)
                 self.assertEqual(render.await_args.args[0]["fonts"]["400"], "Zm9udC10ZXN0")
 
+    def test_second_samolet_template_has_independent_grant_and_font_access(self):
+        self.grant(12345, "samolet_context")
+        headers = signed_headers(12345)
+        self.assertEqual(self.client.get("/api/catalog", headers=headers).json()["templates"], ["samolet_context"])
+        font = Path(self.temp.name) / "font.woff2"
+        font.write_bytes(b"font-test")
+        with patch("app.main.font_path", return_value=font):
+            self.assertEqual(self.client.get("/api/templates/samolet/fonts/400", headers=headers).status_code, 200)
+            with patch("app.main.render_png", new_callable=AsyncMock, return_value="dznow_test.png") as render:
+                response = self.client.post("/api/render", headers=headers, json={
+                    "template_id": "samolet_context", "layout": "samolet_context", "data": {}})
+                self.assertEqual(response.status_code, 200)
+                self.assertIn("400", render.await_args.args[0]["fonts"])
+        self.assertEqual(self.client.post("/api/render", headers=headers, json={
+            "template_id": "samolet", "layout": "samolet", "data": {}}).status_code, 403)
+
     def test_signed_identity_cannot_be_changed(self):
         self.grant(12345, "samolet")
         headers = signed_headers(54321)

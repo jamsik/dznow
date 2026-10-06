@@ -7,7 +7,7 @@ import PlanFit from "../components/PlanFit";
 import StyleStudio from "../components/StyleStudio";
 import PrimaryAction from "../components/PrimaryAction";
 import Icon, { PlayGlyph } from "../components/icons";
-import { FORM_SECTIONS, SAMOLET_SECTIONS } from "../data/formSchema";
+import { FORM_SECTIONS, SAMOLET_SECTIONS, SAMOLET_CONTEXT_SECTIONS } from "../data/formSchema";
 import { resolvePalette } from "../lib/palette";
 import { cleanPlan, fitImage } from "../lib/planImage";
 import { haptic } from "../lib/telegram";
@@ -41,7 +41,7 @@ export default function EditorPage({ scenario, draft, setDraft, agency, onCreate
   // Планировка пересобирается при смене файла, режима или варианта оформления:
   // цвет линий должен совпадать с цветом макета.
   const { planSource, planMode } = draft;
-  const planStroke = resolvePalette(draft).planStroke;
+  const planStroke = scenario.layout === "samolet_context" ? "#087ffa" : resolvePalette(draft).planStroke;
   useEffect(() => {
     if (!planSource) return;
     let alive = true;
@@ -93,7 +93,7 @@ export default function EditorPage({ scenario, draft, setDraft, agency, onCreate
 
           {tab === "info" ? (
             <>
-              {(scenario.layout === "samolet" ? SAMOLET_SECTIONS : FORM_SECTIONS).map(s => (
+              {(scenario.layout === "samolet_context" ? SAMOLET_CONTEXT_SECTIONS : scenario.layout === "samolet" ? SAMOLET_SECTIONS : FORM_SECTIONS).map(s => (
                 <FormSection key={s.title} section={s} draft={draft} onChange={change} />
               ))}
 

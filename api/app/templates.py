@@ -7,7 +7,8 @@ from . import db
 from .config import ALLOW_DEV_NO_AUTH, SAMOLET_FONT_DIR
 
 PRIVATE_LAYOUT = "samolet"
-TEMPLATE_LAYOUTS = {"object": "card", "figure": "figure", "light": "card", "samolet": "samolet"}
+TEMPLATE_LAYOUTS = {"object": "card", "figure": "figure", "light": "card",
+                    "samolet": "samolet", "samolet_context": "samolet_context"}
 FONT_FILES = {
     "400": "CoFo_Sans-Regular.woff2",
     "500": "CoFo_Sans-Medium.woff2",

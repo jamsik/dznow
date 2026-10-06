@@ -46,3 +46,14 @@ export const SAMOLET_SECTIONS = [...FORM_SECTIONS, {
     { k: "walkKindergarten", label: "Детский сад", type: "text" }
   ]
 }];
+
+export const SAMOLET_CONTEXT_SECTIONS = [...FORM_SECTIONS, {
+  title: "Контекст и окружение",
+  rows: [
+    { k: "insightTitle", label: "Заголовок вывода", type: "text" },
+    { k: "insightText", label: "Вывод", type: "textarea" },
+    { k: "walkStop", label: "Остановка", type: "text" },
+    { k: "walkSchool", label: "Школа", type: "text" },
+    { k: "walkKindergarten", label: "Детский сад", type: "text" }
+  ]
+}];

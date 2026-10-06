@@ -104,7 +104,7 @@ export default function ResultPage({ project, format, setFormat, fileUrl, error,
           <b>Сервер файл не собрал.</b> {error}
           <br />
           {denied ? "Доступ изменён администратором. Вернитесь в приложение после обновления доступа."
-            : project.layout === "samolet"
+            : project.layout === "samolet" || project.layout === "samolet_context"
             ? "Вернитесь в редактор и повторите создание файла."
             : "«Скачать» соберёт картинку прямо в браузере — получится тот же макет, но качество ниже и мелкие детали могут съехать."}
         </div>
@@ -122,7 +122,7 @@ export default function ResultPage({ project, format, setFormat, fileUrl, error,
       </div>
 
       <div className="result-actions">
-        <button className="btn primary" onClick={download} disabled={busy || denied || (project.layout === "samolet" && !fileUrl)}>
+        <button className="btn primary" onClick={download} disabled={busy || denied || (["samolet", "samolet_context"].includes(project.layout) && !fileUrl)}>
           <Icon name="download" /> {busy ? "Сохраняю…" : "Скачать"}
         </button>
         {saved && <div className="savednote">{saved}</div>}

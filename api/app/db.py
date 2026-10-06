@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS template_access (
 CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
 """
 
-TEMPLATE_IDS = ("object", "figure", "light", "samolet")
+TEMPLATE_IDS = ("object", "figure", "light", "samolet", "samolet_context")
 
 
 @contextmanager
@@ -172,6 +172,8 @@ def save_project(user_id: int, p: dict):
 
 
 def infer_template(layout: str, data: dict) -> str:
+    if layout == "samolet_context":
+        return "samolet_context"
     if layout == "samolet":
         return "samolet"
     if layout == "figure":

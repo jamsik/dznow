@@ -186,6 +186,54 @@
 .story.no-plan.lay-samolet .sm-title{margin-top:70px}
 .story.no-plan.lay-samolet .sm-mortgage{margin-top:auto}
 
+/* Samolet's second story: all meaningful text stays between y=250 and y=1680
+   on the 1080×1920 export. The white corners can enter the UI-safe bands. */
+.story.lay-samolet_context{padding:0;background:#087ffa;color:#fff;font-family:"CoFo Sans",sans-serif}
+.story.lay-samolet_context::after{display:none}
+.story.lay-samolet_context > *{position:absolute;z-index:2}
+.sc-top-shape{left:505px;top:0;width:575px;height:355px;z-index:1!important}
+.sc-bottom-shape{left:0;bottom:0;width:660px;height:370px;z-index:1!important}
+.sc-header{left:90px;top:250px;width:900px;height:102px}
+.sc-lockup,.sc-uploaded-logo{display:block;width:390px;height:102px;object-fit:contain;object-position:left center}
+.sc-agency-name{font-size:46px;font-weight:700;width:430px;line-height:1.1}
+.sc-tag{position:absolute;left:597px;top:0;width:290px;color:#0779e7;font-size:34px;font-weight:700;line-height:1.05;overflow-wrap:anywhere}
+.sc-title{left:90px;top:365px;width:900px;font-size:62px;font-weight:700;letter-spacing:-.015em;line-height:1.04;overflow-wrap:anywhere}
+.sc-title span{display:block}
+.sc-price{left:90px;top:510px;width:900px;display:flex;justify-content:space-between;align-items:baseline;gap:20px}
+.sc-total{font-size:77px;font-weight:700;line-height:1.05;white-space:nowrap;font-variant-numeric:tabular-nums}
+.sc-meter{font-size:32px;white-space:nowrap}
+.sc-finance{left:90px;top:605px;width:900px;display:flex;align-items:center;justify-content:space-between}
+.sc-payment{display:flex;align-items:baseline;gap:18px;background:#f1f4f8;color:#087ffa;border:2px solid #d7e0eb;border-radius:19px;padding:12px 24px;min-width:435px;box-shadow:0 3px 8px rgba(0,48,118,.08)}
+.sc-payment>span:first-child{font-size:43px;font-weight:700;white-space:nowrap}
+.sc-payment>span:last-child{font-size:27px;white-space:nowrap}
+.sc-terms{width:275px;font-size:30px;line-height:1.18}
+.sc-section{left:90px;height:70px;border:2px solid #fff;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:38px;font-weight:400;white-space:nowrap;gap:9px}
+.sc-section strong{font-weight:700}
+.sc-plan-heading{top:710px;width:900px}
+.sc-plan-card{left:90px;top:805px;width:545px;height:475px;padding:20px;background:#fff;border-radius:20px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.sc-plan-art{width:100%;height:100%;margin:0;padding:0;display:grid;place-items:center;overflow:hidden}
+.sc-plan-art .s-plan-fit{width:100%;height:100%}
+.sc-plan-art img{max-width:100%;max-height:100%;object-fit:contain;border-radius:0}
+.sc-plan-empty{color:#087ffa;font-size:28px;text-align:center}
+.sc-facts{left:685px;top:805px;width:305px;height:475px;display:grid;grid-template-rows:repeat(4,1fr);gap:16px}
+.sc-fact{border:2px solid #fff;border-radius:18px;display:flex;align-items:center;gap:17px;padding:12px 16px;min-width:0}
+.sc-fact img{width:56px;height:56px;object-fit:contain;filter:brightness(0) invert(1);flex:none}
+.sc-fact div{min-width:0}.sc-fact span{display:block;font-size:29px;line-height:1.05}.sc-fact strong{display:block;font-size:32px;font-weight:700;line-height:1.1;overflow-wrap:anywhere}
+.sc-context-heading{left:90px;top:1315px;width:545px}
+.sc-insight{left:90px;top:1400px;width:545px;font-size:30px;line-height:1.12}
+.sc-insight-title{display:flex;align-items:center;gap:15px;font-size:30px;font-weight:500;letter-spacing:.01em}
+.sc-insight-title span{display:inline-flex;align-items:center;justify-content:center;width:35px;height:35px;border-radius:7px;background:#fff;color:#087ffa;font-size:28px}
+.sc-insight p{margin:14px 0 0;max-height:135px;overflow:hidden}
+.sc-amenities{left:685px;top:1310px;width:305px;display:grid;gap:17px}
+.sc-amenity{display:flex;align-items:center;gap:18px;font-size:28px;font-weight:500;line-height:1.1;min-height:95px}
+.sc-amenity>span:last-child{overflow-wrap:anywhere}
+.sc-amenity-icon{width:64px;height:64px;border:2px solid #fff;border-radius:50%;display:grid;place-items:center;flex:none;position:relative}
+.sc-amenity:not(:last-child) .sc-amenity-icon::after{content:"";position:absolute;top:63px;left:29px;width:2px;height:39px;background:#fff}
+.sc-amenity-icon svg{width:42px;height:42px}
+.sc-contact{left:90px;top:1583px;display:flex;align-items:center;gap:23px;color:#087ffa;font-size:38px;font-weight:700;line-height:1.06;max-width:530px}
+.sc-contact svg{width:39px;height:39px;flex:none}
+.sc-contact strong{display:block;font-weight:700}
+
 /* animation */
 @keyframes s-rise{from{opacity:0;transform:translateY(38px)}to{opacity:1;transform:none}}
 @keyframes s-pop{from{opacity:0;transform:scale(.86)}to{opacity:1;transform:none}}

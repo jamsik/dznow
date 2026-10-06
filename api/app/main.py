@@ -150,7 +150,8 @@ def catalog(x_telegram_init_data: str = Header("")):
 @app.get("/api/templates/samolet/fonts/{weight}")
 def samolet_font(weight: str, x_telegram_init_data: str = Header("")):
     user = current_user(x_telegram_init_data)
-    require_template(user, "samolet", PRIVATE_LAYOUT)
+    if not {"samolet", "samolet_context"}.intersection(allowed_templates(user)):
+        raise HTTPException(status_code=403, detail="Фирменный шрифт вам недоступен")
     return FileResponse(font_path(weight), media_type="font/woff2", headers={"Cache-Control": "private, max-age=3600"})
 
 
@@ -183,7 +184,7 @@ async def render(req: RenderRequest, x_telegram_init_data: str = Header("")):
             "author": {"name": user["name"], "tel": user.get("tel") or "", "contacts": ""},
         },
     }
-    if req.layout == PRIVATE_LAYOUT:
+    if req.layout in (PRIVATE_LAYOUT, "samolet_context"):
         payload["fonts"] = {
             weight: base64.b64encode(font_path(weight).read_bytes()).decode("ascii")
             for weight in FONT_FILES

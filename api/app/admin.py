@@ -167,6 +167,7 @@ def users(request: Request, response: Response):
         {"id": "figure", "title": "Крупная цифра"},
         {"id": "light", "title": "Светлая карточка"},
         {"id": "samolet", "title": "Самолет"},
+        {"id": "samolet_context", "title": "Самолет · контекст"},
     ]}
 
 

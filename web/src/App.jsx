@@ -56,7 +56,7 @@ export default function App() {
       .catch(err => logError("не удалось загрузить список проектов", err?.message));
     api.catalog().then(async c => {
       const ids = c.templates || [];
-      if (ids.includes("samolet")) await loadSamoletFont();
+      if (ids.includes("samolet") || ids.includes("samolet_context")) await loadSamoletFont();
       setAllowedTemplates(ids);
     })
       .catch(err => logError("не удалось загрузить доступные шаблоны", err?.message));
@@ -74,7 +74,7 @@ export default function App() {
   const openScenario = (s, selected = s.id) => { setScenario(s); setTemplateId(selected); go("editor"); };
 
   const openProject = p => {
-    const selected = p.template_id || (p.layout === "samolet" ? "samolet" : p.layout === "figure" ? "figure" : "object");
+      const selected = p.template_id || (p.layout === "samolet" ? "samolet" : p.layout === "samolet_context" ? "samolet_context" : p.layout === "figure" ? "figure" : "object");
     if (!allowedTemplates.includes(selected)) return;
     setScenario(scenarioForLayout(p.layout));
     setTemplateId(selected);

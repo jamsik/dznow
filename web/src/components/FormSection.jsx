@@ -61,6 +61,13 @@ function Row({ field, value, onChange }) {
     );
   }
 
+  if (field.type === "textarea") {
+    return <div className="row row-multiline">
+      <label htmlFor={"f-" + field.k}>{field.label}</label>
+      <textarea id={"f-" + field.k} rows="3" value={local} onChange={e => handle(e.target.value)} />
+    </div>;
+  }
+
   const isMoney = field.type === "money";
   const isNumber = field.type === "number";
 

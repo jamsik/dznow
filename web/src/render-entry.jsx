@@ -87,7 +87,7 @@ requestAnimationFrame(() => requestAnimationFrame(() => {
 
 // Страховка: что-то не догрузилось — лучше снять кадр, чем висеть до таймаута.
 setTimeout(() => {
-  if (payload.layout === "samolet" && !window.__DZNOW_READY) {
+  if (["samolet", "samolet_context"].includes(payload.layout) && !window.__DZNOW_READY) {
     window.__DZNOW_ERROR ||= "Фирменный шрифт не загрузился вовремя";
   } else {
     done();
