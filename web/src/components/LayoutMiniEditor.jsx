@@ -8,7 +8,7 @@ export default function LayoutMiniEditor({ active, onActive, selected, onSelecte
 
   return <section className="section layout-mini-editor">
     <h3>Расположение элементов</h3>
-    <p className="hint">Включите режим и перетаскивайте блоки на макете слева. Их положение сохранится вместе с проектом. Верхняя и нижняя безопасные зоны защищены.</p>
+    <p className="hint">Включите режим и перетаскивайте блоки на макете. После сохранения положение изменится во всех карточках этого шаблона. Верхняя и нижняя безопасные зоны защищены.</p>
     <button type="button" className="btn line layout-edit-toggle" aria-pressed={active} onClick={() => onActive(!active)}>
       {active ? "Готово · выключить перемещение" : "Перемещать блоки"}
     </button>

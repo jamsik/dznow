@@ -144,6 +144,19 @@ def set_template_access(user_id: int, template_id: str, enabled: bool) -> bool:
         return True
 
 
+def get_json_setting(key: str):
+    with conn() as c:
+        row = c.execute("SELECT value FROM settings WHERE key=?", (key,)).fetchone()
+    return json.loads(row["value"]) if row else None
+
+
+def set_json_setting(key: str, value) -> None:
+    with conn() as c:
+        c.execute("""INSERT INTO settings(key,value) VALUES(?,?)
+                     ON CONFLICT(key) DO UPDATE SET value=excluded.value""",
+                  (key, json.dumps(value, ensure_ascii=False)))
+
+
 def list_projects(user_id: int, limit: int = 24):
     with conn() as c:
         rows = c.execute(

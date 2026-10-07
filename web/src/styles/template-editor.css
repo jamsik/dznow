@@ -1,0 +1,20 @@
+@font-face{font-family:"CoFo Sans";src:url("/dzadmin/api/fonts/400") format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"CoFo Sans";src:url("/dzadmin/api/fonts/500") format("woff2");font-weight:500;font-display:swap}
+@font-face{font-family:"CoFo Sans";src:url("/dzadmin/api/fonts/700") format("woff2");font-weight:700;font-display:swap}
+@font-face{font-family:"CoFo Sans";src:url("/dzadmin/api/fonts/900") format("woff2");font-weight:900;font-display:swap}
+.template-editor-page{max-width:1200px;margin:0 auto;padding:24px 20px 50px;color:var(--text)}
+.template-editor-header{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.template-editor-header h1{font-size:28px;margin:10px 0 2px}
+.template-editor-header p{margin:0;color:var(--muted)}
+.template-editor-header a,.template-editor-page a{color:var(--accent)}
+.template-editor-header button{border:0;border-radius:12px;padding:13px 20px;background:var(--accent);color:#fff;font:600 15px var(--ui);cursor:pointer}
+.template-editor-header button:disabled{opacity:.5;cursor:default}
+.template-editor-status{min-height:22px;color:var(--muted);font-size:14px;margin:18px 0}
+.template-editor-grid{display:grid;grid-template-columns:minmax(300px,540px) minmax(280px,1fr);gap:30px;align-items:start}
+.template-editor-preview{width:100%;max-width:540px;position:sticky;top:20px}
+.template-editor-preview .pv{box-shadow:var(--shadow-2)}
+.template-editor-sidebar .section{margin-top:0}
+.template-editor-sidebar .layout-mini-editor{background:var(--surface);border-radius:var(--r-m);padding:20px;box-shadow:var(--shadow-1)}
+.template-editor-upload{display:block;margin:20px 0 8px;font-size:14px;font-weight:600}
+.template-editor-upload input{display:block;margin-top:9px;max-width:100%}
+@media(max-width:800px){.template-editor-grid{grid-template-columns:1fr}.template-editor-preview{position:static;max-width:450px;margin:auto}.template-editor-sidebar{max-width:540px;margin:auto;width:100%}}

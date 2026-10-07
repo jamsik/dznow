@@ -14,6 +14,7 @@ import { materialize } from "./lib/upload";
 import { brandFrom } from "./data/brand";
 import { loadProfile, saveProfile } from "./lib/profile";
 import { BrandContext } from "./lib/brandContext";
+import { LayoutSettingsContext } from "./lib/layoutSettingsContext";
 import { BASE_DRAFT, SCENARIOS, TEMPLATES, draftForLayout, normalizeSamoletContext, scenarioForLayout } from "./data/catalog";
 import { initTelegram, telegramUser, useTelegramBack } from "./lib/telegram";
 import { logError, logInfo } from "./lib/log";
@@ -29,6 +30,7 @@ export default function App() {
   const [draft, setDraft] = useState({ ...BASE_DRAFT });
   const [projects, setProjects] = useState([]);
   const [allowedTemplates, setAllowedTemplates] = useState([]);
+  const [layoutSettings, setLayoutSettings] = useState(null);
   const [access, setAccess] = useState(isMock ? "granted" : "loading");
   const [accessError, setAccessError] = useState("");
   const templates = TEMPLATES.filter(t => allowedTemplates.includes(t.id));
@@ -57,6 +59,7 @@ export default function App() {
     api.catalog().then(async c => {
       const ids = c.templates || [];
       if (ids.includes("samolet") || ids.includes("samolet_context")) await loadSamoletFont();
+      setLayoutSettings(c.layout_settings || {});
       setAllowedTemplates(ids);
     })
       .catch(err => logError("не удалось загрузить доступные шаблоны", err?.message));
@@ -158,6 +161,7 @@ export default function App() {
   }
 
   return (
+    <LayoutSettingsContext.Provider value={layoutSettings}>
     <BrandContext.Provider value={brand}>
       {route === "render" ? (
         <RenderPage draft={draft} layout={scenario.layout} work={renderWork}
@@ -208,5 +212,6 @@ export default function App() {
       {chrome && <BottomNavigation route={route} go={go} />}
       {sheet && <Sheet onClose={() => setSheet(null)}>{sheet}</Sheet>}
     </BrandContext.Provider>
+    </LayoutSettingsContext.Provider>
   );
 }

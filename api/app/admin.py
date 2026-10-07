@@ -11,11 +11,13 @@ from urllib.parse import urlsplit
 
 from fastapi import APIRouter, Header, HTTPException, Request, Response
 from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from . import db
+from . import layout_settings
 from .telegram_profile import lookup
-from .templates import TEMPLATE_LAYOUTS
+from .templates import TEMPLATE_LAYOUTS, font_path
 
 router = APIRouter(prefix="/dzadmin")
 COOKIE = "dzadmin_session"
@@ -96,6 +98,33 @@ class NewUser(BaseModel):
 
 class Toggle(BaseModel):
     enabled: bool
+
+
+class TemplateLayout(BaseModel):
+    offsets: dict
+
+
+@router.get("/api/template-layout")
+def get_template_layout(request: Request, response: Response):
+    _require_admin(request)
+    response.headers["Cache-Control"] = "no-store"
+    return {"offsets": layout_settings.current()}
+
+
+@router.put("/api/template-layout")
+def put_template_layout(payload: TemplateLayout, request: Request, x_admin_csrf: str = Header("")):
+    _require_write(request, x_admin_csrf)
+    try:
+        offsets = layout_settings.save(payload.offsets)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {"offsets": offsets}
+
+
+@router.get("/api/fonts/{weight}")
+def admin_font(weight: str, request: Request):
+    _require_admin(request)
+    return FileResponse(font_path(weight), media_type="font/woff2", headers={"Cache-Control": "private, no-store"})
 
 
 @router.get("", response_class=HTMLResponse)

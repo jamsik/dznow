@@ -4,6 +4,7 @@ import RealtyFigure from "./RealtyFigure";
 import RealtySamolet from "./RealtySamolet";
 import RealtySamoletContext from "./RealtySamoletContext";
 import { useBrand } from "../lib/brandContext";
+import { useLayoutSettings } from "../lib/layoutSettingsContext";
 import { resolvePalette, rgba, effectiveDim } from "../lib/palette";
 import { fontSet } from "../data/fonts";
 
@@ -25,6 +26,10 @@ const StoryCanvas = forwardRef(function StoryCanvas(
   ref
 ) {
   const brand = useBrand();
+  const layoutSettings = useLayoutSettings();
+  const effectiveData = layout === "samolet_context" && layoutSettings?.samolet_context
+    ? { ...data, layoutOffsets: layoutSettings.samolet_context }
+    : data;
   const Layout = LAYOUTS[layout] || RealtyCard;
   const show = { ...ALL_ON, ...(data.show || {}) };
   const p = resolvePalette(data);
@@ -73,7 +78,7 @@ const StoryCanvas = forwardRef(function StoryCanvas(
         </div>
       )}
       <Layout
-        d={data}
+        d={effectiveData}
         show={show}
         agency={agency || brand.agency}
         author={author || brand.author}

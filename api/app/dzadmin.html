@@ -13,6 +13,7 @@
     input[type=text],input[type=password],input[type=search]{background:#111a2b;border:1px solid #53617a;border-radius:10px;color:#fff;padding:12px 14px;font:inherit;min-width:0}
     input:focus-visible,button:focus-visible{outline:2px solid #6da9ff;outline-offset:2px}
     button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:11px 16px;background:#1980f9;color:#fff;font-weight:650}
+    .button-link{display:inline-block;border-radius:10px;padding:11px 16px;background:#1980f9;color:#fff;font-weight:650;text-decoration:none}
     button.secondary{background:#303d55} button:disabled{opacity:.55;cursor:wait}
     form{display:flex;gap:10px;flex-wrap:wrap;align-items:center} form input{flex:1 1 180px}
     .users{display:grid;gap:12px}.user{background:#1c263a;border:1px solid #34415a;border-radius:16px;padding:18px}
@@ -38,6 +39,9 @@
     <form id="login-form"><input id="password" type="password" autocomplete="current-password" placeholder="Пароль" aria-label="Пароль" required /><button type="submit">Войти</button></form>
   </section>
   <section id="admin-panel" hidden>
+    <div class="panel"><h2>Шаблоны</h2><p class="muted">Точечная правка расположения элементов для всех пользователей шаблона.</p>
+      <a class="button-link" href="/template-editor.html">Открыть редактор «Самолет · контекст»</a>
+    </div>
     <div class="panel"><h2>Добавить по Telegram ID</h2><p class="muted">Имя и @username загружаются через бота, если Telegram разрешает получить этот профиль. После открытия приложения данные обновятся автоматически.</p>
       <form id="add-form"><input id="new-id" type="text" inputmode="numeric" pattern="[0-9]+" placeholder="Telegram ID" aria-label="Telegram ID" required />
         <input id="new-name" type="text" maxlength="120" placeholder="Ваша пометка (необязательно)" aria-label="Ваша пометка" />

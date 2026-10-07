@@ -164,6 +164,37 @@ class AccessTests(unittest.TestCase):
         self.assertIn("Админка", result.text)
         self.assertIn("frame-ancestors 'none'", result.headers["content-security-policy"])
 
+    def test_admin_layout_applies_to_catalog_and_render(self):
+        self.grant(12345, "samolet_context")
+        self.assertEqual(self.client.get("/dzadmin/api/template-layout").status_code, 401)
+        self.assertEqual(self.client.get("/dzadmin/api/fonts/400").status_code, 401)
+        self.assertEqual(self.client.put("/dzadmin/api/template-layout", json={"offsets": {}}).status_code, 401)
+        self.client.post("/dzadmin/api/login", json={"password": "long-admin-password"})
+        csrf = self.client.get("/dzadmin/api/session").json()["csrf"]
+        font = Path(self.temp.name) / "font.woff2"
+        font.write_bytes(b"font-test")
+        with patch("app.admin.font_path", return_value=font):
+            self.assertEqual(self.client.get("/dzadmin/api/fonts/400").content, b"font-test")
+        headers = {"X-Admin-CSRF": csrf, "Origin": "http://testserver"}
+        # A request outside the safe area is clamped before persistence.
+        result = self.client.put("/dzadmin/api/template-layout", headers=headers,
+                                 json={"offsets": {"plan": {"x": 9999, "y": -9999}}})
+        self.assertEqual(result.status_code, 200)
+        self.assertEqual(result.json()["offsets"]["plan"], {"x": 385, "y": -555})
+        self.assertEqual(self.client.put("/dzadmin/api/template-layout", headers=headers,
+                                         json={"offsets": {"unknown": {"x": 1, "y": 1}}}).status_code, 422)
+        self.assertEqual(self.client.get("/dzadmin/api/template-layout").json(), result.json())
+        catalog = self.client.get("/api/catalog", headers=signed_headers(12345)).json()
+        self.assertEqual(catalog["layout_settings"]["samolet_context"], result.json()["offsets"])
+        with patch("app.main.font_path", return_value=font), patch(
+            "app.main.render_png", new_callable=AsyncMock, return_value="dznow_test.png"
+        ) as render:
+            response = self.client.post("/api/render", headers=signed_headers(12345), json={
+                "template_id": "samolet_context", "layout": "samolet_context",
+                "data": {"layoutOffsets": {"plan": {"x": 5, "y": 5}}}})
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(render.await_args.args[0]["data"]["layoutOffsets"], result.json()["offsets"])
+
 
 if __name__ == "__main__":
     unittest.main()

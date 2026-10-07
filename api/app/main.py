@@ -12,7 +12,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from . import admin, db
+from . import admin, db, layout_settings
 from .auth import validate
 from .config import ALLOW_DEV_NO_AUTH, DATA_DIR, DIST_DIR, FILES_DIR
 from .render import render_png, shutdown
@@ -144,7 +144,9 @@ def projects(x_telegram_init_data: str = Header("")):
 @app.get("/api/catalog")
 def catalog(x_telegram_init_data: str = Header("")):
     user = current_user(x_telegram_init_data)
-    return {"templates": allowed_templates(user)}
+    templates = allowed_templates(user)
+    settings = {"samolet_context": layout_settings.current()} if "samolet_context" in templates else {}
+    return {"templates": templates, "layout_settings": settings}
 
 
 @app.get("/api/templates/samolet/fonts/{weight}")
@@ -177,7 +179,8 @@ async def render(req: RenderRequest, x_telegram_init_data: str = Header("")):
     # Бренд берём из профиля пользователя. Когда появятся арендаторы,
     # это место начнёт брать тему из таблицы tenants, а не из запроса.
     payload = {
-        "data": req.data,
+        "data": {**req.data, "layoutOffsets": layout_settings.current()}
+        if req.layout == "samolet_context" else req.data,
         "layout": req.layout,
         "brand": req.brand or {
             "agency": AGENCY,

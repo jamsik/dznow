@@ -13,7 +13,8 @@ export default defineConfig({
         // render.html — «голая» страница с одним макетом 1080×1920,
         //               её открывает рендер-воркер и снимает скриншот
         main: resolve(__dirname, "index.html"),
-        render: resolve(__dirname, "render.html")
+        render: resolve(__dirname, "render.html"),
+        templateEditor: resolve(__dirname, "template-editor.html")
       }
     }
   },
