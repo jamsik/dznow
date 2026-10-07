@@ -4,13 +4,14 @@ import json
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 from urllib.parse import quote, urlencode
 
 from fastapi.testclient import TestClient
 
 from app import db
 from app.main import app
+from app.render import _shoot
 
 
 def signed_headers(user_id, first_name="Тест", username=""):
@@ -134,6 +135,21 @@ class AccessTests(unittest.TestCase):
             self.assertEqual(render.await_args.args[0]["fonts"], {"400": "Y2lyY2UtdGVzdA==", "700": "Y2lyY2UtdGVzdA=="})
         with patch("app.main.circe_font_path", return_value=font):
             self.assertEqual(self.client.get("/api/templates/feature/fonts/700", headers=headers).content, b"circe-test")
+
+    def test_feature_format_is_validated_and_changes_render_viewport(self):
+        self.grant(12345, "feature")
+        headers = signed_headers(12345)
+        data = {"bgImage": "/files/u_test.webp", "headline": "Потоп", "rubric": "Фича"}
+        response = self.client.post("/api/projects", headers=headers, json={
+            "id": "format", "title": "Руки", "scenario": "feature", "layout": "feature",
+            "template_id": "feature", "at": 1, "data": {**data, "featureFormat": "7:3"}})
+        self.assertEqual(response.status_code, 422)
+        context = MagicMock()
+        page = context.new_page.return_value
+        page.evaluate.side_effect = [None, {}]
+        _shoot(context, {"layout": "feature", "data": {**data, "featureFormat": "4:3"}})
+        page.set_viewport_size.assert_called_once_with({"width": 1440, "height": 1080})
+        page.close.assert_called_once()
 
     def test_signed_identity_cannot_be_changed(self):
         self.grant(12345, "samolet")

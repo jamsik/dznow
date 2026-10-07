@@ -5,6 +5,7 @@ import { exportNodeToPng } from "../lib/exportPng";
 import { saveImage } from "../lib/download";
 import { haptic } from "../lib/telegram";
 import { logError } from "../lib/log";
+import { featureFormat } from "../data/featureFormats";
 
 export default function ResultPage({ project, format, setFormat, fileUrl, error, denied, onEdit, onAgain, onSheet }) {
   const [playing, setPlaying] = useState(false);
@@ -13,7 +14,8 @@ export default function ResultPage({ project, format, setFormat, fileUrl, error,
   const storyRef = useRef(null);
   const timer = useRef(0);
 
-  const meta = format === "mp4" ? "MP4 · 1080×1920 · 8 сек" : "PNG · 1080×1920";
+  const dimensions = project.layout === "feature" ? featureFormat(project.data.featureFormat) : { width: 1080, height: 1920 };
+  const meta = `${format === "mp4" ? "MP4" : "PNG"} · ${dimensions.width}×${dimensions.height}${format === "mp4" ? " · 8 сек" : ""}`;
 
   // Сервер не отдал файл — значит, «Скачать» соберёт картинку прямо в браузере.
   // Это запасной путь: html2canvas рисует не всё и иногда съезжает, поэтому

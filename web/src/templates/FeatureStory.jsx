@@ -1,3 +1,5 @@
+import { featureFormat } from "../data/featureFormats";
+
 const clamp = (value, min, max) => Math.min(max, Math.max(min, Number(value) || 0));
 
 function headlineSize(line, width) {
@@ -26,6 +28,15 @@ function headlineLines(value) {
 
 export default function FeatureStory({ d }) {
   const lines = headlineLines(d.headline);
+  const { width, height } = featureFormat(d.featureFormat);
+  const horizontal = width > height;
+  const titleTop = Math.round(Math.max(90, Math.min(height * .13, 250)));
+  const titleLeft = Math.round(width * .095);
+  const titleWidth = Math.round(width * (horizontal ? .76 : .815));
+  const firstWidth = Math.round(width * (horizontal ? .55 : .53));
+  const titleMaxSize = Math.round(Math.min(width * .167, height * .17, horizontal ? 185 : 180));
+  const rubricLeft = Math.round(width * (horizontal ? .67 : .645));
+  const rubricWidth = Math.round(width - rubricLeft - width * .055);
   const shade = clamp(d.featureShade ?? 0.24, 0, 0.7);
   const x = clamp(d.bgX ?? 50, 0, 100);
   const y = clamp(d.bgY ?? 50, 0, 100);
@@ -36,10 +47,11 @@ export default function FeatureStory({ d }) {
     </div>
     <div className="ft-shade" style={{ background: `linear-gradient(180deg, rgba(9,22,65,${shade}) 0%, rgba(9,22,65,${shade * .45}) 38%, rgba(9,22,65,.08) 100%)` }} />
     {!d.bgImage && <div className="ft-placeholder">Загрузите изображение фона</div>}
-    <div className="ft-title anim" style={{ "--d": ".1s" }}>
+    <div className="ft-title anim" style={{ "--d": ".1s", left: titleLeft, top: titleTop, width: titleWidth }}>
       {lines.map((line, index) => <span key={index} className="ft-title-line"
-        style={{ fontSize: headlineSize(line, index === 0 ? 570 : 880) }}>{line}</span>)}
+        style={{ fontSize: Math.min(titleMaxSize, headlineSize(line, index === 0 ? firstWidth : titleWidth)), maxWidth: index === 0 ? firstWidth : titleWidth }}>{line}</span>)}
     </div>
-    <div className="ft-rubric anim" style={{ "--d": ".25s" }}>{d.rubric}</div>
+    <div className="ft-rubric anim" style={{ "--d": ".25s", left: rubricLeft, top: titleTop + 28, width: rubricWidth,
+      fontSize: Math.round(Math.min(48, width * .045, height * .052)) }}>{d.rubric}</div>
   </>;
 }

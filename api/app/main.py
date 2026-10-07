@@ -15,7 +15,7 @@ from pydantic import BaseModel
 from . import admin, db, layout_settings
 from .auth import validate
 from .config import ALLOW_DEV_NO_AUTH, DATA_DIR, DIST_DIR, FILES_DIR
-from .render import render_png, shutdown
+from .render import FEATURE_VIEWPORTS, render_png, shutdown
 from .templates import CIRCE_FILES, FONT_FILES, PRIVATE_LAYOUT, allowed_templates, circe_font_path, font_path, require_template
 
 app = FastAPI(title="DZNOW API", version="0.1.0")
@@ -55,6 +55,8 @@ class RenderRequest(BaseModel):
 
 
 def require_feature_content(data: dict) -> None:
+    if data.get("featureFormat", "9:16") not in FEATURE_VIEWPORTS:
+        raise HTTPException(status_code=422, detail="Недопустимый формат изображения")
     if not data.get("bgImage"):
         raise HTTPException(status_code=422, detail="Загрузите фоновое изображение")
     if not str(data.get("headline") or "").strip() or not str(data.get("rubric") or "").strip():

@@ -12,6 +12,7 @@ import { FEATURE_SECTIONS, FORM_SECTIONS, SAMOLET_SECTIONS, SAMOLET_CONTEXT_SECT
 import { resolvePalette } from "../lib/palette";
 import { cleanPlan, fitImage } from "../lib/planImage";
 import { haptic } from "../lib/telegram";
+import { featureFormat } from "../data/featureFormats";
 
 const TABS = [
   { id: "info",   title: "Информация" },
@@ -134,7 +135,9 @@ export default function EditorPage({ scenario, draft, setDraft, agency, onCreate
             </>
           )}
 
-          <PrimaryAction label="Создать" note="Story<br>1080×1920" onClick={onCreate}
+          <PrimaryAction label="Создать" note={scenario.layout === "feature"
+            ? `PNG<br>${featureFormat(draft.featureFormat).width}×${featureFormat(draft.featureFormat).height}`
+            : "Story<br>1080×1920"} onClick={onCreate}
             disabled={scenario.layout === "feature" && (!draft.bgImage || !draft.headline?.trim() || !draft.rubric?.trim())} />
         </div>
       </div>

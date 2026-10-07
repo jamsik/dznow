@@ -25,6 +25,8 @@ from playwright.sync_api import sync_playwright
 from .config import CHROMIUM_NO_SANDBOX, FILES_DIR, RENDER_URL
 
 VIEWPORT = {"width": 1080, "height": 1920}
+FEATURE_VIEWPORTS = {"9:16": (1080, 1920), "4:5": (1080, 1350), "3:4": (1080, 1440),
+                     "1:1": (1080, 1080), "4:3": (1440, 1080), "16:9": (1920, 1080)}
 JOB_TIMEOUT = 90          # сколько ждём один макет, секунды
 
 # Три числа против нехватки памяти. Chromium на странице 1080×1920 просит
@@ -62,6 +64,9 @@ _lock = threading.Lock()
 def _shoot(context, payload: dict) -> str:
     page = context.new_page()
     try:
+        if payload.get("layout") == "feature":
+            width, height = FEATURE_VIEWPORTS[payload.get("data", {}).get("featureFormat", "9:16")]
+            page.set_viewport_size({"width": width, "height": height})
         # Данные кладём в страницу скриптом, а не в адресную строку.
         # Картинки теперь ездят ссылками (/files/u_*), но payload всё равно
         # не для URL: там текст макета, бренд и флаги.

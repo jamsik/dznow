@@ -83,7 +83,10 @@ export default function App() {
     if (!allowedTemplates.includes(selected)) return;
     setScenario(scenarioForLayout(p.layout));
     setTemplateId(selected);
-    setDraft(p.layout === "samolet_context" ? normalizeSamoletContext(p.data) : { ...p.data });
+    setDraft(p.layout === "samolet_context" ? normalizeSamoletContext(p.data)
+      : p.layout === "feature" ? { ...p.data, featureSource: p.data.featureSource || p.data.bgImage,
+        featureFormat: p.data.featureFormat || "9:16", featureFit: p.data.featureFit || "cover" }
+      : { ...p.data });
     go("editor");
   };
 
@@ -98,7 +101,7 @@ export default function App() {
 
     const project = {
       id: "p" + Date.now(),
-      title: scenario.layout === "feature" ? (draft.headline || "Поучительная фича").replace(/\s+/g, " ").trim().slice(0, 80) : draft.complex,
+      title: scenario.layout === "feature" ? (draft.headline || "Руки").replace(/\s+/g, " ").trim().slice(0, 80) : draft.complex,
       scenario: scenario.id,
       layout: scenario.layout,
       template_id: templateId,
@@ -115,7 +118,7 @@ export default function App() {
     const res = await api.render({ data: project.data, layout: project.layout, templateId, format, brand });
     // Черновик тоже переводим на ссылки: иначе при «Изменить → Создать»
     // те же картинки загрузились бы ещё раз.
-    setDraft(d => ({ ...d, planImage: data.planImage, bgImage: data.bgImage }));
+    setDraft(d => ({ ...d, planImage: data.planImage, bgImage: data.bgImage, featureSource: data.featureSource }));
     return res?.url || null;
   }, [draft, scenario, templateId, format, brand]);
 

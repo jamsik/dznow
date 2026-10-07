@@ -8,6 +8,7 @@ import { useBrand } from "../lib/brandContext";
 import { useLayoutSettings } from "../lib/layoutSettingsContext";
 import { resolvePalette, rgba, effectiveDim } from "../lib/palette";
 import { fontSet } from "../data/fonts";
+import { featureFormat } from "../data/featureFormats";
 
 const LAYOUTS = { card: RealtyCard, figure: RealtyFigure, samolet: RealtySamolet,
   samolet_context: RealtySamoletContext, feature: FeatureStory };
@@ -70,8 +71,9 @@ const StoryCanvas = forwardRef(function StoryCanvas(
         ${rgba(p.bg, 0.05 + 0.45 * i)} 0%, ${rgba(p.bg, 0.35 + 0.65 * i)} 100%)`
     : null;
 
+  const dimensions = layout === "feature" ? featureFormat(data.featureFormat) : null;
   return (
-    <div className={cls} ref={ref} style={vars}>
+    <div className={cls} ref={ref} style={{ ...vars, ...(dimensions ? { width: dimensions.width, height: dimensions.height } : {}) }}>
       {data.bgImage && layout !== "feature" && (
         <div className="s-bg" aria-hidden="true">
           <img src={data.bgImage} alt="" />

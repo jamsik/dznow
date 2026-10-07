@@ -66,7 +66,7 @@ export async function materialize(data) {
   if (isMock) return data;               // без сервера грузить некуда
 
   const out = { ...data };
-  const jobs = ["planImage", "bgImage"]
+  const jobs = ["planImage", "bgImage", "featureSource"]
     .filter(k => isData(out[k]))
     .map(async k => {
       try {

@@ -20,7 +20,7 @@ export const TEMPLATES = [
   { id: "light",  title: "Светлая карточка", kind: "Story", motion: false, layout: "card",   skin: "light"  },
   { id: "samolet", title: "Самолет · персональный", kind: "Story", motion: true, layout: "samolet", private: true },
   { id: "samolet_context", title: "Самолет · планировка и контекст", kind: "Story", motion: true, layout: "samolet_context", private: true },
-  { id: "feature", title: "Поучительная фича", kind: "Story", motion: true, layout: "feature", private: true }
+  { id: "feature", title: "Руки", kind: "Изображение", motion: true, layout: "feature", private: true }
 ];
 
 // Значения по умолчанию для схемы realty.flat.v1
@@ -53,6 +53,10 @@ export const BASE_DRAFT = {
 
   // Фон: картинка ЖК под содержимым, проявляется градиентом
   bgImage: null,
+  featureSource: null,
+  featureFormat: "9:16",
+  featureFit: "extend",
+  featurePosition: 100,
   bgIntensity: 0.5,       // 0 — картинка почти открыта, 1 — закрыта цветом фона
   bgDirection: "br",      // куда уходит плотная часть: tl · tr · bl · br
 
@@ -154,7 +158,7 @@ export const draftForLayout = layout => layout === "samolet_context"
 export const scenarioForLayout = layout => layout === "samolet_context"
   ? { id: "samolet_context", layout, title: "Самолет · планировка и контекст", ready: true }
   : layout === "feature"
-  ? { id: "feature", layout, title: "Поучительная фича", ready: true }
+  ? { id: "feature", layout, title: "Руки", ready: true }
   : layout === "samolet"
   ? { id: "samolet", layout: "samolet", title: "Самолет · персональный", ready: true }
   : SCENARIOS.find(s => s.layout === layout) || SCENARIOS[0];
