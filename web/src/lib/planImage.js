@@ -39,11 +39,11 @@ const kb = url => Math.round(url.length * 0.75 / 1024);
  * Нужна для режима «как есть»: снимок с телефона может весить мегабайты,
  * а он потом уезжает на сервер в теле запроса и ложится в базу.
  */
-export function fitImage(dataUrl) {
+export function fitImage(dataUrl, maxSide = MAX_SIDE) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
-      const scale = Math.min(1, MAX_SIDE / Math.max(img.width, img.height));
+      const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
       if (scale === 1 && dataUrl.length < 600 * 1024) { resolve(dataUrl); return; }
       const w = Math.max(1, Math.round(img.width * scale));
       const h = Math.max(1, Math.round(img.height * scale));

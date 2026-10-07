@@ -439,6 +439,7 @@ input[type=file]{display:none}
 /* акцентная кнопка получает фирменный градиент */
 .btn.primary{background:var(--grad)}
 .btn.primary:hover{filter:brightness(1.08)}
+.btn.primary:disabled{opacity:.45;cursor:not-allowed;box-shadow:none;filter:none}
 .rbar i{background:var(--grad)}
 .result-top .ok{background:var(--grad)}
 .prof .av{background:var(--grad)}

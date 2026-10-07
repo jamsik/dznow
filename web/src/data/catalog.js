@@ -19,7 +19,8 @@ export const TEMPLATES = [
   { id: "figure", title: "Крупная цифра",    kind: "Reel",  motion: true,  layout: "figure", skin: "accent" },
   { id: "light",  title: "Светлая карточка", kind: "Story", motion: false, layout: "card",   skin: "light"  },
   { id: "samolet", title: "Самолет · персональный", kind: "Story", motion: true, layout: "samolet", private: true },
-  { id: "samolet_context", title: "Самолет · планировка и контекст", kind: "Story", motion: true, layout: "samolet_context", private: true }
+  { id: "samolet_context", title: "Самолет · планировка и контекст", kind: "Story", motion: true, layout: "samolet_context", private: true },
+  { id: "feature", title: "Поучительная фича", kind: "Story", motion: true, layout: "feature", private: true }
 ];
 
 // Значения по умолчанию для схемы realty.flat.v1
@@ -75,6 +76,7 @@ export const BASE_DRAFT = {
  * в редакторе этот переключатель просто не появится.
  */
 export const LAYOUT_BLOCKS = {
+  feature: [],
   samolet: ["logo", "agency", "tag", "author", "phone", "contacts"],
   samolet_context: ["logo", "agency", "tag", "author", "phone", "contacts"],
   card:   ["logo", "agency", "tag", "author", "phone", "contacts"],
@@ -117,6 +119,18 @@ export const SAMOLET_CONTEXT_DRAFT = {
   layoutOffsets: {}
 };
 
+export const FEATURE_DRAFT = {
+  ...BASE_DRAFT,
+  headline: "Потоп\nна 350 000",
+  rubric: "поучительная\nфича",
+  bgImage: null,
+  bgX: 50,
+  bgY: 50,
+  featureShade: 0.24,
+  fontId: "onest",
+  show: { logo: false, agency: false, tag: false, author: false, phone: false, contacts: false }
+};
+
 export const splitWalk = value => {
   const text = String(value || "").trim();
   const match = text.match(/^(\d+(?:[.,]\d+)?\s*[^\s]+)\s*(.*)$/u);
@@ -136,9 +150,11 @@ export function normalizeSamoletContext(data) {
 
 export const draftForLayout = layout => layout === "samolet_context"
   ? normalizeSamoletContext(SAMOLET_CONTEXT_DRAFT)
-  : { ...(layout === "samolet" ? SAMOLET_DRAFT : BASE_DRAFT) };
+  : { ...(layout === "feature" ? FEATURE_DRAFT : layout === "samolet" ? SAMOLET_DRAFT : BASE_DRAFT) };
 export const scenarioForLayout = layout => layout === "samolet_context"
   ? { id: "samolet_context", layout, title: "Самолет · планировка и контекст", ready: true }
+  : layout === "feature"
+  ? { id: "feature", layout, title: "Поучительная фича", ready: true }
   : layout === "samolet"
   ? { id: "samolet", layout: "samolet", title: "Самолет · персональный", ready: true }
   : SCENARIOS.find(s => s.layout === layout) || SCENARIOS[0];

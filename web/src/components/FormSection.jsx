@@ -64,7 +64,8 @@ function Row({ field, value, onChange }) {
   if (field.type === "textarea") {
     return <div className="row row-multiline">
       <label htmlFor={"f-" + field.k}>{field.label}</label>
-      <textarea id={"f-" + field.k} rows="3" value={local} onChange={e => handle(e.target.value)} />
+      <textarea id={"f-" + field.k} rows={field.rows || 3} maxLength={field.maxLength}
+                value={local} onChange={e => handle(e.target.value)} />
     </div>;
   }
 

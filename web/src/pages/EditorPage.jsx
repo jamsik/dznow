@@ -6,8 +6,9 @@ import ShowToggles from "../components/ShowToggles";
 import PlanFit from "../components/PlanFit";
 import StyleStudio from "../components/StyleStudio";
 import PrimaryAction from "../components/PrimaryAction";
+import FeatureBackgroundControls from "../components/FeatureBackgroundControls";
 import Icon, { PlayGlyph } from "../components/icons";
-import { FORM_SECTIONS, SAMOLET_SECTIONS, SAMOLET_CONTEXT_SECTIONS } from "../data/formSchema";
+import { FEATURE_SECTIONS, FORM_SECTIONS, SAMOLET_SECTIONS, SAMOLET_CONTEXT_SECTIONS } from "../data/formSchema";
 import { resolvePalette } from "../lib/palette";
 import { cleanPlan, fitImage } from "../lib/planImage";
 import { haptic } from "../lib/telegram";
@@ -84,14 +85,18 @@ export default function EditorPage({ scenario, draft, setDraft, agency, onCreate
         </div>
 
         <div className="right">
-          <div className="tabs" role="tablist">
+          {scenario.layout !== "feature" && <div className="tabs" role="tablist">
             {TABS.map(t => (
               <button key={t.id} className="tab" role="tab" aria-selected={tab === t.id}
                       onClick={() => setTab(t.id)}>{t.title}</button>
             ))}
-          </div>
+          </div>}
 
-          {tab === "info" ? (
+          {scenario.layout === "feature" ? <>
+            <FeatureBackgroundControls draft={draft} onChange={patch} />
+            {FEATURE_SECTIONS.map(section => <FormSection key={section.title} section={section} draft={draft} onChange={change} />)}
+            <p className="hint">Перенос строки в поле «Основной текст» сохраняется на макете. Рубрика ставится справа от первой строки.</p>
+          </> : tab === "info" ? (
             <>
               {(scenario.layout === "samolet_context" ? SAMOLET_CONTEXT_SECTIONS : scenario.layout === "samolet" ? SAMOLET_SECTIONS : FORM_SECTIONS).map(s => (
                 <FormSection key={s.title} section={s} draft={draft} onChange={change} />
@@ -129,7 +134,8 @@ export default function EditorPage({ scenario, draft, setDraft, agency, onCreate
             </>
           )}
 
-          <PrimaryAction label="Создать" note="Story<br>1080×1920" onClick={onCreate} />
+          <PrimaryAction label="Создать" note="Story<br>1080×1920" onClick={onCreate}
+            disabled={scenario.layout === "feature" && (!draft.bgImage || !draft.headline?.trim() || !draft.rubric?.trim())} />
         </div>
       </div>
       <div className="cta-space" />

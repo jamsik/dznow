@@ -16,7 +16,7 @@ from . import admin, db, layout_settings
 from .auth import validate
 from .config import ALLOW_DEV_NO_AUTH, DATA_DIR, DIST_DIR, FILES_DIR
 from .render import render_png, shutdown
-from .templates import FONT_FILES, PRIVATE_LAYOUT, allowed_templates, font_path, require_template
+from .templates import CIRCE_FILES, FONT_FILES, PRIVATE_LAYOUT, allowed_templates, circe_font_path, font_path, require_template
 
 app = FastAPI(title="DZNOW API", version="0.1.0")
 
@@ -52,6 +52,13 @@ class RenderRequest(BaseModel):
     format: str = "png"
     brand: dict | None = None   # подпись и логотип из профиля
     template_id: str | None = None
+
+
+def require_feature_content(data: dict) -> None:
+    if not data.get("bgImage"):
+        raise HTTPException(status_code=422, detail="Загрузите фоновое изображение")
+    if not str(data.get("headline") or "").strip() or not str(data.get("rubric") or "").strip():
+        raise HTTPException(status_code=422, detail="Заполните основной текст и рубрику")
 
 
 def current_user(init_data: str, require_access: bool = True):
@@ -157,11 +164,22 @@ def samolet_font(weight: str, x_telegram_init_data: str = Header("")):
     return FileResponse(font_path(weight), media_type="font/woff2", headers={"Cache-Control": "private, max-age=3600"})
 
 
+@app.get("/api/templates/feature/fonts/{weight}")
+def feature_font(weight: str, x_telegram_init_data: str = Header("")):
+    user = current_user(x_telegram_init_data)
+    if "feature" not in allowed_templates(user):
+        raise HTTPException(status_code=403, detail="Шрифт шаблона вам недоступен")
+    return FileResponse(circe_font_path(weight), media_type="font/woff2",
+                        headers={"Cache-Control": "private, max-age=3600"})
+
+
 @app.post("/api/projects")
 def create_project(project: Project, x_telegram_init_data: str = Header("")):
     user = current_user(x_telegram_init_data)
     template_id = project.template_id or db.infer_template(project.layout, project.data)
     require_template(user, template_id, project.layout)
+    if project.layout == "feature":
+        require_feature_content(project.data)
     return db.save_project(user["id"], {**project.model_dump(), "template_id": template_id})
 
 
@@ -170,6 +188,8 @@ async def render(req: RenderRequest, x_telegram_init_data: str = Header("")):
     user = current_user(x_telegram_init_data)
     template_id = req.template_id or db.infer_template(req.layout, req.data)
     require_template(user, template_id, req.layout)
+    if req.layout == "feature":
+        require_feature_content(req.data)
     if req.format != "png":
         # MP4 — следующий шаг: покадровый рендер + ffmpeg, поэтому честный 501,
         # клиент показывает объяснение вместо битой кнопки.
@@ -191,6 +211,12 @@ async def render(req: RenderRequest, x_telegram_init_data: str = Header("")):
         payload["fonts"] = {
             weight: base64.b64encode(font_path(weight).read_bytes()).decode("ascii")
             for weight in FONT_FILES
+        }
+    elif req.layout == "feature":
+        payload["fontFamily"] = "Circe"
+        payload["fonts"] = {
+            weight: base64.b64encode(circe_font_path(weight).read_bytes()).decode("ascii")
+            for weight in CIRCE_FILES
         }
     started = time.monotonic()
     try:

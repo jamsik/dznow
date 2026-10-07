@@ -97,6 +97,14 @@ export const api = {
     if (!response.ok) throw new Error(`Не удалось загрузить фирменный шрифт (${response.status})`);
     return response.blob();
   },
+  async featureFont(weight) {
+    if (isMock) throw new Error("Шрифт шаблона доступен только с сервером");
+    const response = await fetch(`${BASE}/templates/feature/fonts/${weight}`, {
+      headers: { "X-Telegram-Init-Data": initDataRaw() }
+    });
+    if (!response.ok) throw new Error(`Не удалось загрузить шрифт шаблона (${response.status})`);
+    return response.blob();
+  },
   // Профиль и бренд живут на устройстве (lib/profile.js), пока нет сервера.
   async me() {
     if (isMock) return { service_access: true };

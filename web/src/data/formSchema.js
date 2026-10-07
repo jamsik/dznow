@@ -60,3 +60,11 @@ export const SAMOLET_CONTEXT_SECTIONS = [...FORM_SECTIONS, {
     { k: "walkKindergartenDetail", label: "Как и куда", type: "text" }
   ]
 }];
+
+export const FEATURE_SECTIONS = [{
+  title: "Текст на изображении",
+  rows: [
+    { k: "headline", label: "Основной текст", type: "textarea", rows: 3, maxLength: 70 },
+    { k: "rubric", label: "Рубрика", type: "textarea", rows: 2, maxLength: 35 }
+  ]
+}];

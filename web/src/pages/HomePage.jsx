@@ -52,7 +52,7 @@ export default function HomePage({ category, setCategory, projects, templates, a
           <StoryPreview data={p.data} layout={p.layout} />
           <div>
             <div className="t">{p.title}</div>
-            <div className="m"><b>{short(p.data.price)}</b> · {relTime(p.at)}</div>
+            <div className="m"><b>{p.layout === "feature" ? p.data.rubric?.replace(/\s+/g, " ") : short(p.data.price)}</b> · {relTime(p.at)}</div>
           </div>
           <span className="cta">Продолжить <Icon name="chev" /></span>
         </button>

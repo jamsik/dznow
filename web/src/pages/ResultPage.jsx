@@ -40,7 +40,7 @@ export default function ResultPage({ project, format, setFormat, fileUrl, error,
       );
       return;
     }
-    const name = `dznow_${project.data.complex || "story"}_${Date.now()}.png`
+    const name = `dznow_${project.title || "story"}_${Date.now()}.png`
       .replace(/[\\/:*?"<>|«»]/g, "");
 
     // Готовый файл с сервера — сохраняем его, ничего не пересобирая.
@@ -76,7 +76,7 @@ export default function ResultPage({ project, format, setFormat, fileUrl, error,
   };
 
   const share = async () => {
-    const text = `${project.data.complex} · DZNOW`;
+    const text = `${project.title} · DZNOW`;
     if (navigator.share) { try { await navigator.share({ title: "DZNOW", text }); return; } catch (e) {} }
     onSheet(
       <>
@@ -104,7 +104,7 @@ export default function ResultPage({ project, format, setFormat, fileUrl, error,
           <b>Сервер файл не собрал.</b> {error}
           <br />
           {denied ? "Доступ изменён администратором. Вернитесь в приложение после обновления доступа."
-            : project.layout === "samolet" || project.layout === "samolet_context"
+            : project.layout === "samolet" || project.layout === "samolet_context" || project.layout === "feature"
             ? "Вернитесь в редактор и повторите создание файла."
             : "«Скачать» соберёт картинку прямо в браузере — получится тот же макет, но качество ниже и мелкие детали могут съехать."}
         </div>

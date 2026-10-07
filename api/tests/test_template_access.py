@@ -107,6 +107,34 @@ class AccessTests(unittest.TestCase):
         self.assertEqual(self.client.post("/api/render", headers=headers, json={
             "template_id": "samolet", "layout": "samolet", "data": {}}).status_code, 403)
 
+    def test_feature_template_requires_grant_image_and_circe(self):
+        self.grant(12345, "object")
+        headers = signed_headers(12345)
+        self.assertNotIn("feature", self.client.get("/api/catalog", headers=headers).json()["templates"])
+        self.assertEqual(self.client.get("/api/templates/feature/fonts/400", headers=headers).status_code, 403)
+        self.assertEqual(self.client.post("/api/render", headers=headers, json={
+            "template_id": "feature", "layout": "feature", "data": {"bgImage": "/files/u_test.webp"}}).status_code, 403)
+        db.set_template_access(12345, "feature", True)
+        self.assertIn("feature", self.client.get("/api/catalog", headers=headers).json()["templates"])
+        self.assertEqual(self.client.post("/api/render", headers=headers, json={
+            "template_id": "feature", "layout": "feature", "data": {}}).status_code, 422)
+        self.assertEqual(self.client.post("/api/render", headers=headers, json={
+            "template_id": "feature", "layout": "feature",
+            "data": {"bgImage": "/files/u_test.webp"}}).status_code, 422)
+        font = Path(self.temp.name) / "circe.woff2"
+        font.write_bytes(b"circe-test")
+        with patch("app.main.circe_font_path", return_value=font), patch(
+            "app.main.render_png", new_callable=AsyncMock, return_value="dznow_feature.png"
+        ) as render:
+            response = self.client.post("/api/render", headers=headers, json={
+                "template_id": "feature", "layout": "feature",
+                "data": {"bgImage": "/files/u_test.webp", "headline": "Потоп", "rubric": "Фича"}})
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(render.await_args.args[0]["fontFamily"], "Circe")
+            self.assertEqual(render.await_args.args[0]["fonts"], {"400": "Y2lyY2UtdGVzdA==", "700": "Y2lyY2UtdGVzdA=="})
+        with patch("app.main.circe_font_path", return_value=font):
+            self.assertEqual(self.client.get("/api/templates/feature/fonts/700", headers=headers).content, b"circe-test")
+
     def test_signed_identity_cannot_be_changed(self):
         self.grant(12345, "samolet")
         headers = signed_headers(54321)
@@ -133,6 +161,7 @@ class AccessTests(unittest.TestCase):
         self.assertEqual(self.client.post("/dzadmin/api/login", json={"password": "wrong"}).status_code, 401)
         self.assertEqual(self.client.post("/dzadmin/api/login", json={"password": "long-admin-password"}).status_code, 200)
         csrf = self.client.get("/dzadmin/api/session").json()["csrf"]
+        self.assertIn("feature", [item["id"] for item in self.client.get("/dzadmin/api/users").json()["templates"]])
         self.assertEqual(self.client.post("/dzadmin/api/users", json={"id": 12345}).status_code, 403)
         headers = {"X-Admin-CSRF": csrf, "Origin": "http://testserver"}
         with patch("app.admin.lookup", return_value=("Анна", "anna_test")):

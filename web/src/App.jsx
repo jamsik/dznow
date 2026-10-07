@@ -19,6 +19,7 @@ import { BASE_DRAFT, SCENARIOS, TEMPLATES, draftForLayout, normalizeSamoletConte
 import { initTelegram, telegramUser, useTelegramBack } from "./lib/telegram";
 import { logError, logInfo } from "./lib/log";
 import { loadSamoletFont } from "./lib/samoletFont";
+import { loadFeatureFont } from "./lib/featureFont";
 
 const FULL_SCREEN = ["editor", "render", "result"];
 
@@ -59,6 +60,7 @@ export default function App() {
     api.catalog().then(async c => {
       const ids = c.templates || [];
       if (ids.includes("samolet") || ids.includes("samolet_context")) await loadSamoletFont();
+      if (ids.includes("feature")) await loadFeatureFont();
       setLayoutSettings(c.layout_settings || {});
       setAllowedTemplates(ids);
     })
@@ -77,7 +79,7 @@ export default function App() {
   const openScenario = (s, selected = s.id) => { setScenario(s); setTemplateId(selected); go("editor"); };
 
   const openProject = p => {
-      const selected = p.template_id || (p.layout === "samolet" ? "samolet" : p.layout === "samolet_context" ? "samolet_context" : p.layout === "figure" ? "figure" : "object");
+    const selected = p.template_id || (p.layout === "feature" ? "feature" : p.layout === "samolet" ? "samolet" : p.layout === "samolet_context" ? "samolet_context" : p.layout === "figure" ? "figure" : "object");
     if (!allowedTemplates.includes(selected)) return;
     setScenario(scenarioForLayout(p.layout));
     setTemplateId(selected);
@@ -96,7 +98,7 @@ export default function App() {
 
     const project = {
       id: "p" + Date.now(),
-      title: draft.complex,
+      title: scenario.layout === "feature" ? (draft.headline || "Поучительная фича").replace(/\s+/g, " ").trim().slice(0, 80) : draft.complex,
       scenario: scenario.id,
       layout: scenario.layout,
       template_id: templateId,

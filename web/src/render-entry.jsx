@@ -61,12 +61,13 @@ const mark = k => () => { window.__DZNOW_TIMING[k] = Math.round(performance.now(
 async function payloadFontsReady() {
   const entries = Object.entries(payload.fonts || {});
   if (entries.length) {
+    const family = payload.fontFamily === "Circe" ? "Circe" : "CoFo Sans";
     const style = document.createElement("style");
     style.textContent = entries.map(([weight, encoded]) =>
-      `@font-face{font-family:"CoFo Sans";src:url("data:font/woff2;base64,${encoded}") format("woff2");font-style:normal;font-weight:${weight};font-display:block}`
+      `@font-face{font-family:"${family}";src:url("data:font/woff2;base64,${encoded}") format("woff2");font-style:normal;font-weight:${weight};font-display:block}`
     ).join("\n");
     document.head.append(style);
-    await Promise.all(entries.map(([weight]) => document.fonts.load(`${weight} 16px "CoFo Sans"`, "ЖК 123")));
+    await Promise.all(entries.map(([weight]) => document.fonts.load(`${weight} 16px "${family}"`, "ЖК 123")));
   }
   await (document.fonts?.ready || Promise.resolve());
 }
@@ -87,7 +88,7 @@ requestAnimationFrame(() => requestAnimationFrame(() => {
 
 // Страховка: что-то не догрузилось — лучше снять кадр, чем висеть до таймаута.
 setTimeout(() => {
-  if (["samolet", "samolet_context"].includes(payload.layout) && !window.__DZNOW_READY) {
+  if (["samolet", "samolet_context", "feature"].includes(payload.layout) && !window.__DZNOW_READY) {
     window.__DZNOW_ERROR ||= "Фирменный шрифт не загрузился вовремя";
   } else {
     done();

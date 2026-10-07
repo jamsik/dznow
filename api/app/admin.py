@@ -197,6 +197,7 @@ def users(request: Request, response: Response):
         {"id": "light", "title": "Светлая карточка"},
         {"id": "samolet", "title": "Самолет"},
         {"id": "samolet_context", "title": "Самолет · контекст"},
+        {"id": "feature", "title": "Поучительная фича"},
     ]}
 
 

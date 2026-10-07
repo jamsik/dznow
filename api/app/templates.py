@@ -4,17 +4,18 @@ from pathlib import Path
 from fastapi import HTTPException
 
 from . import db
-from .config import ALLOW_DEV_NO_AUTH, SAMOLET_FONT_DIR
+from .config import ALLOW_DEV_NO_AUTH, CIRCE_FONT_DIR, SAMOLET_FONT_DIR
 
 PRIVATE_LAYOUT = "samolet"
 TEMPLATE_LAYOUTS = {"object": "card", "figure": "figure", "light": "card",
-                    "samolet": "samolet", "samolet_context": "samolet_context"}
+                    "samolet": "samolet", "samolet_context": "samolet_context", "feature": "feature"}
 FONT_FILES = {
     "400": "CoFo_Sans-Regular.woff2",
     "500": "CoFo_Sans-Medium.woff2",
     "700": "CoFo_Sans-Bold.woff2",
     "900": "CoFo_Sans-Black.woff2",
 }
+CIRCE_FILES = {"400": "Circe-Regular.woff2", "700": "Circe-Bold.woff2"}
 
 
 def allowed_templates(user: dict) -> list[str]:
@@ -38,4 +39,14 @@ def font_path(weight: str) -> Path:
     path = SAMOLET_FONT_DIR / name
     if not path.is_file():
         raise HTTPException(status_code=503, detail="Фирменный шрифт шаблона не установлен на сервере")
+    return path
+
+
+def circe_font_path(weight: str) -> Path:
+    name = CIRCE_FILES.get(weight)
+    if name is None:
+        raise HTTPException(status_code=404, detail="Начертание не найдено")
+    path = CIRCE_FONT_DIR / name
+    if not path.is_file():
+        raise HTTPException(status_code=503, detail="Шрифт нового шаблона не установлен на сервере")
     return path

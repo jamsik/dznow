@@ -1,5 +1,5 @@
 import StoryPreview from "../components/StoryPreview";
-import { SCENARIOS } from "../data/catalog";
+import { scenarioForLayout } from "../data/catalog";
 import { plural, whenLabel } from "../lib/format";
 
 export default function ProjectsPage({ projects, onOpen, onRepeat }) {
@@ -17,7 +17,7 @@ export default function ProjectsPage({ projects, onOpen, onRepeat }) {
               <div>
                 <div className="t">{p.title}</div>
                 <div className="m">
-                  {(SCENARIOS.find(s => s.id === p.scenario) || {}).title} · {whenLabel(p.at)}
+                  {scenarioForLayout(p.layout).title} · {whenLabel(p.at)}
                 </div>
                 <div className="acts">
                   <button onClick={() => onOpen(p)}>Открыть</button>
