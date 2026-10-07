@@ -50,6 +50,28 @@ function Row({ field, value, onChange }) {
 
   const emit = n => { emitted.current = n; onChange(field.k, n); };
 
+  const isMoney = field.type === "money";
+  const isNumber = field.type === "number";
+
+  const handle = raw => {
+    if (isMoney) {
+      const digits = raw.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
+      setLocal(digits);
+      emit(Number(digits) || 0);
+      return;
+    }
+    if (isNumber) {
+      const draft = numDraft(raw);
+      if (draft === null) return;
+      setLocal(draft);
+      const n = parseNum(draft);
+      if (n !== null) emit(n);
+      return;
+    }
+    setLocal(raw);
+    emit(raw);
+  };
+
   if (field.type === "select") {
     return (
       <div className="row">
@@ -68,28 +90,6 @@ function Row({ field, value, onChange }) {
                 value={local} onChange={e => handle(e.target.value)} />
     </div>;
   }
-
-  const isMoney = field.type === "money";
-  const isNumber = field.type === "number";
-
-  const handle = raw => {
-    if (isMoney) {
-      const digits = raw.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
-      setLocal(digits);
-      emit(Number(digits) || 0);
-      return;
-    }
-    if (isNumber) {
-      const draft = numDraft(raw);
-      if (draft === null) return;          // недопустимый символ — просто игнорируем
-      setLocal(draft);
-      const n = parseNum(draft);
-      if (n !== null) emit(n);             // «54,» ещё не число — значение не трогаем
-      return;
-    }
-    setLocal(raw);
-    emit(raw);
-  };
 
   return (
     <div className="row">
