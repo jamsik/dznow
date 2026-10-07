@@ -1,5 +1,8 @@
+import { useRef } from "react";
 import CountValue from "./CountValue";
 import { StoryPlan } from "./BrandBits";
+import { splitWalk } from "../data/catalog";
+import { clampRegionOffset, regionStyle } from "../data/samoletContextLayout";
 import { annuity, downLabel, money, num } from "../lib/format";
 import areaIcon from "../assets/samolet/area.png";
 import floorIcon from "../assets/samolet/floor.png";
@@ -28,7 +31,41 @@ function AmenityIcon({ kind }) {
   return <svg viewBox="0 0 40 40" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">{paths[kind]}</svg>;
 }
 
-export default function RealtySamoletContext({ d, show, agency, author, playing }) {
+export default function RealtySamoletContext({ d, show, agency, author, playing,
+  layoutEdit, selectedLayoutKey, onLayoutChange, onLayoutSelect }) {
+  const drag = useRef(null);
+  const offsets = d.layoutOffsets || {};
+  const startDrag = (key, event) => {
+    if (!layoutEdit) return;
+    event.preventDefault();
+    onLayoutSelect?.(key);
+    const story = event.currentTarget.closest(".story");
+    const scale = story?.getBoundingClientRect().width / 1080 || 1;
+    drag.current = { key, pointerId: event.pointerId, clientX: event.clientX, clientY: event.clientY,
+      start: clampRegionOffset(key, offsets[key]?.x, offsets[key]?.y), scale };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+  const moveDrag = event => {
+    const moving = drag.current;
+    if (!moving || moving.pointerId !== event.pointerId) return;
+    onLayoutChange?.(moving.key, clampRegionOffset(moving.key,
+      moving.start.x + (event.clientX - moving.clientX) / moving.scale,
+      moving.start.y + (event.clientY - moving.clientY) / moving.scale));
+  };
+  const finishDrag = event => {
+    if (drag.current?.pointerId !== event.pointerId) return;
+    drag.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+  };
+  const place = (key, delay) => ({
+    "data-layout-key": key,
+    "data-selected": layoutEdit && selectedLayoutKey === key ? "true" : undefined,
+    style: regionStyle(offsets, key, delay ? { "--d": delay } : {}),
+    onPointerDown: event => startDrag(key, event),
+    onPointerMove: moveDrag,
+    onPointerUp: finishDrag,
+    onPointerCancel: finishDrag
+  });
   const facts = [
     [areaIcon, "Площадь", `${num(d.area)} м²`],
     [floorIcon, "Этаж", d.floor],
@@ -36,10 +73,11 @@ export default function RealtySamoletContext({ d, show, agency, author, playing 
     [finishIcon, "Отделка", d.finish]
   ];
   const amenities = [
-    ["stop", d.walkStop],
-    ["school", d.walkSchool],
-    ["kindergarten", d.walkKindergarten]
-  ].filter(([, value]) => value);
+    ["stop", "walkStop"], ["school", "walkSchool"], ["kindergarten", "walkKindergarten"]
+  ].map(([kind, prefix]) => {
+    const old = splitWalk(d[prefix]);
+    return [kind, d[`${prefix}Amount`] ?? old.amount, d[`${prefix}Detail`] ?? old.detail];
+  }).filter(([, amount, detail]) => amount || detail);
 
   return <>
     <svg className="sc-top-shape" viewBox="0 0 575 355" preserveAspectRatio="none" aria-hidden="true">
@@ -49,7 +87,7 @@ export default function RealtySamoletContext({ d, show, agency, author, playing 
       <path fill="#fff" d="M0 50 450 0Q510 -3 540 48L660 370H0Z" />
     </svg>
 
-    <div className="sc-header">
+    <div className="sc-header" {...place("header")}>
       {show.logo && (agency.logo
         ? <img className="sc-uploaded-logo" src={agency.logo} alt={agency.name || "Логотип"} />
         : <SamoletLockup district={d.district} />)}
@@ -57,48 +95,48 @@ export default function RealtySamoletContext({ d, show, agency, author, playing 
       {show.tag && <div className="sc-tag">{d.tag}</div>}
     </div>
 
-    <div className="sc-title anim" style={{ "--d": ".1s" }}>
+    <div className="sc-title anim" {...place("title", ".1s")}>
       <span>{d.rooms}</span><span>{d.complex}</span>
     </div>
-    <div className="sc-price anim" style={{ "--d": ".2s" }}>
+    <div className="sc-price anim" {...place("price", ".2s")}>
       <CountValue className="sc-total" value={d.price} format={money} playing={playing} delay={0.2} />
       {Number(d.area) > 0 && <span className="sc-meter">{num(Math.round(d.price / d.area))} ₽ за м²</span>}
     </div>
-    <div className="sc-finance anim" style={{ "--d": ".3s" }}>
+    <div className="sc-finance anim" {...place("finance", ".3s")}>
       <div className="sc-payment"><CountValue value={annuity(d)} format={money} playing={playing} delay={0.3} /><span>в ипотеку</span></div>
       <div className="sc-terms">взнос {downLabel(d)} · {num(d.rate)}%<br />на {num(d.term)} лет</div>
     </div>
 
-    <div className="sc-section sc-plan-heading anim" style={{ "--d": ".4s" }}>
+    <div className="sc-section sc-plan-heading anim" {...place("planHeading", ".4s")}>
       ПЛАНИРОВКА — <strong>ЭТО ПЕРВАЯ СТОРОНА</strong>
     </div>
-    <div className="sc-plan-card anim" style={{ "--d": ".5s" }}>
+    <div className="sc-plan-card anim" {...place("plan", ".5s")}>
       {d.planImage
         ? <StoryPlan d={d} className="sc-plan-art" />
         : <span className="sc-plan-empty">Планировка объекта</span>}
     </div>
-    <div className="sc-facts">
+    <div className="sc-facts" {...place("facts")}>
       {facts.map(([icon, label, value], i) => <div className="sc-fact anim" key={label} style={{ "--d": `${.55 + i * .08}s` }}>
         <img src={icon} alt="" />
         <div><span>{label}</span><strong>{value}</strong></div>
       </div>)}
     </div>
 
-    <div className="sc-section sc-context-heading anim" style={{ "--d": ".9s" }}>
+    <div className="sc-section sc-context-heading anim" {...place("contextHeading", ".9s")}>
       КОНТЕКСТ — <strong>ВТОРАЯ</strong>
     </div>
-    <div className="sc-insight anim" style={{ "--d": "1s" }}>
+    <div className="sc-insight anim" {...place("insight", "1s")}>
       <div className="sc-insight-title"><span aria-hidden="true">▤</span>{d.insightTitle}</div>
       <p>{d.insightText}</p>
     </div>
-    <div className="sc-amenities">
-      {amenities.map(([kind, value], i) => <div className="sc-amenity anim" key={kind} style={{ "--d": `${1 + i * .08}s` }}>
+    <div className="sc-amenities" {...place("amenities")}>
+      {amenities.map(([kind, amount, detail], i) => <div className="sc-amenity anim" key={kind} style={{ "--d": `${1 + i * .08}s` }}>
         <span className="sc-amenity-icon"><AmenityIcon kind={kind} /></span>
-        <span>{value}</span>
+        <span className="sc-amenity-copy"><strong>{amount}</strong><span>{detail}</span></span>
       </div>)}
     </div>
 
-    {(show.author || show.phone) && <div className="sc-contact anim" style={{ "--d": "1.25s" }}>
+    {(show.author || show.phone) && <div className="sc-contact anim" {...place("contact", "1.25s")}>
       <svg viewBox="0 0 36 36" aria-hidden="true" fill="currentColor"><path d="M9 4c-2 0-5 3-5 7 0 10 11 21 21 21 4 0 7-3 7-5 0-1-1-2-2-3l-5-3c-1-1-3-1-4 1l-2 2c-4-2-7-5-9-9l2-2c2-1 2-3 1-4l-3-5C10 4 9 4 9 4Z" /></svg>
       <div>{show.author && <strong>{author.name}</strong>}{show.phone && <strong>{author.tel}</strong>}</div>
     </div>}

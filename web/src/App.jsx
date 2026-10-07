@@ -14,7 +14,7 @@ import { materialize } from "./lib/upload";
 import { brandFrom } from "./data/brand";
 import { loadProfile, saveProfile } from "./lib/profile";
 import { BrandContext } from "./lib/brandContext";
-import { BASE_DRAFT, SCENARIOS, TEMPLATES, draftForLayout, scenarioForLayout } from "./data/catalog";
+import { BASE_DRAFT, SCENARIOS, TEMPLATES, draftForLayout, normalizeSamoletContext, scenarioForLayout } from "./data/catalog";
 import { initTelegram, telegramUser, useTelegramBack } from "./lib/telegram";
 import { logError, logInfo } from "./lib/log";
 import { loadSamoletFont } from "./lib/samoletFont";
@@ -78,7 +78,7 @@ export default function App() {
     if (!allowedTemplates.includes(selected)) return;
     setScenario(scenarioForLayout(p.layout));
     setTemplateId(selected);
-    setDraft({ ...p.data });
+    setDraft(p.layout === "samolet_context" ? normalizeSamoletContext(p.data) : { ...p.data });
     go("editor");
   };
 

@@ -6,6 +6,7 @@ import ShowToggles from "../components/ShowToggles";
 import PlanFit from "../components/PlanFit";
 import StyleStudio from "../components/StyleStudio";
 import PrimaryAction from "../components/PrimaryAction";
+import LayoutMiniEditor from "../components/LayoutMiniEditor";
 import Icon, { PlayGlyph } from "../components/icons";
 import { FORM_SECTIONS, SAMOLET_SECTIONS, SAMOLET_CONTEXT_SECTIONS } from "../data/formSchema";
 import { resolvePalette } from "../lib/palette";
@@ -23,6 +24,8 @@ export default function EditorPage({ scenario, draft, setDraft, agency, onCreate
   // Две вкладки вместо одной длинной простыни: заполнение данных и оформление —
   // разные занятия, и на телефоне пролистывать оформление ради цены было долго.
   const [tab, setTab] = useState("info");
+  const [layoutEdit, setLayoutEdit] = useState(false);
+  const [selectedLayoutKey, setSelectedLayoutKey] = useState("plan");
   const timer = useRef(0);
 
   const play = () => {
@@ -37,6 +40,9 @@ export default function EditorPage({ scenario, draft, setDraft, agency, onCreate
 
   const change = (key, value) => setDraft(d => ({ ...d, [key]: value }));
   const patch = fields => setDraft(d => ({ ...d, ...fields }));
+  const changeLayout = (key, offset) => setDraft(d => ({
+    ...d, layoutOffsets: { ...(d.layoutOffsets || {}), [key]: offset }
+  }));
 
   // Планировка пересобирается при смене файла, режима или варианта оформления:
   // цвет линий должен совпадать с цветом макета.
@@ -76,10 +82,12 @@ export default function EditorPage({ scenario, draft, setDraft, agency, onCreate
         <div className="left">
           <div className="stagewrap">
             <StoryPreview className="pv-main" data={draft} layout={scenario.layout}
-                          playing={playing} forced />
-            <button className="playbtn" data-busy={playing ? "1" : undefined} onClick={play}>
+                          playing={playing} forced layoutEdit={layoutEdit && tab === "design"}
+                          selectedLayoutKey={selectedLayoutKey} onLayoutChange={changeLayout}
+                          onLayoutSelect={setSelectedLayoutKey} />
+            {!layoutEdit && <button className="playbtn" data-busy={playing ? "1" : undefined} onClick={play}>
               <PlayGlyph /> Просмотреть анимацию
-            </button>
+            </button>}
           </div>
         </div>
 
@@ -116,6 +124,11 @@ export default function EditorPage({ scenario, draft, setDraft, agency, onCreate
             </>
           ) : (
             <>
+              {scenario.layout === "samolet_context" && <LayoutMiniEditor
+                active={layoutEdit} onActive={value => { setPlaying(false); setLayoutEdit(value); }}
+                selected={selectedLayoutKey} onSelected={setSelectedLayoutKey}
+                offsets={draft.layoutOffsets} onChange={changeLayout}
+                onReset={() => change("layoutOffsets", {})} />}
               <StyleStudio draft={draft} onChange={patch} agency={agency} layout={scenario.layout} />
 
               <PlanFit draft={draft} onChange={patch} />

@@ -20,7 +20,8 @@ const VEIL_ANGLE = { tl: 135, tr: 225, bl: 45, br: 315 };
  * собранную пользователем.
  */
 const StoryCanvas = forwardRef(function StoryCanvas(
-  { data, layout = "card", playing = false, forced = false, agency, author },
+  { data, layout = "card", playing = false, forced = false, agency, author,
+    layoutEdit = false, selectedLayoutKey, onLayoutChange, onLayoutSelect },
   ref
 ) {
   const brand = useBrand();
@@ -33,7 +34,8 @@ const StoryCanvas = forwardRef(function StoryCanvas(
     "story", `lay-${layout}`,
     data.planImage ? "" : "no-plan",
     data.bgImage ? "has-bg" : "",
-    playing ? "playing" : "", playing && forced ? "force" : ""
+    playing ? "playing" : "", playing && forced ? "force" : "",
+    layoutEdit ? "layout-edit" : ""
   ].filter(Boolean).join(" ");
 
   const vars = {
@@ -76,6 +78,10 @@ const StoryCanvas = forwardRef(function StoryCanvas(
         agency={agency || brand.agency}
         author={author || brand.author}
         playing={playing}
+        layoutEdit={layoutEdit}
+        selectedLayoutKey={selectedLayoutKey}
+        onLayoutChange={onLayoutChange}
+        onLayoutSelect={onLayoutSelect}
       />
     </div>
   );

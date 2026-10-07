@@ -106,14 +106,37 @@ export const SAMOLET_CONTEXT_DRAFT = {
   rooms: "3-комнатная",
   area: 76.5,
   planMode: "sketch",
-  walkStop: "10 мин. пешком до остановки",
-  walkSchool: "20 мин. пешком до школы",
-  walkKindergarten: "15 мин. пешком до детского сада",
+  walkStopAmount: "10 мин.",
+  walkStopDetail: "пешком до остановки",
+  walkSchoolAmount: "20 мин.",
+  walkSchoolDetail: "пешком до школы",
+  walkKindergartenAmount: "15 мин.",
+  walkKindergartenDetail: "пешком до детского сада",
   insightTitle: "РЕНТГЕН-ВЫВОД",
-  insightText: "Подойдёт семье, если важно, чтобы была школа рядом, спокойный двор и планировка без лишних метров."
+  insightText: "Подойдёт семье, если важно, чтобы была школа рядом, спокойный двор и планировка без лишних метров.",
+  layoutOffsets: {}
 };
 
-export const draftForLayout = layout => ({ ...(layout === "samolet_context" ? SAMOLET_CONTEXT_DRAFT : layout === "samolet" ? SAMOLET_DRAFT : BASE_DRAFT) });
+export const splitWalk = value => {
+  const text = String(value || "").trim();
+  const match = text.match(/^(\d+(?:[.,]\d+)?\s*[^\s]+)\s*(.*)$/u);
+  return match ? { amount: match[1], detail: match[2] } : { amount: "", detail: text };
+};
+
+export function normalizeSamoletContext(data) {
+  const draft = { ...data, layoutOffsets: { ...(data.layoutOffsets || {}) } };
+  for (const [prefix, legacy] of [["walkStop", "walkStop"], ["walkSchool", "walkSchool"], ["walkKindergarten", "walkKindergarten"]]) {
+    if (draft[`${prefix}Amount`] !== undefined || draft[`${prefix}Detail`] !== undefined) continue;
+    const { amount, detail } = splitWalk(draft[legacy]);
+    draft[`${prefix}Amount`] = amount;
+    draft[`${prefix}Detail`] = detail;
+  }
+  return draft;
+}
+
+export const draftForLayout = layout => layout === "samolet_context"
+  ? normalizeSamoletContext(SAMOLET_CONTEXT_DRAFT)
+  : { ...(layout === "samolet" ? SAMOLET_DRAFT : BASE_DRAFT) };
 export const scenarioForLayout = layout => layout === "samolet_context"
   ? { id: "samolet_context", layout, title: "Самолет · планировка и контекст", ready: true }
   : layout === "samolet"

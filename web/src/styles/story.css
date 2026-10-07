@@ -226,13 +226,18 @@
 .sc-insight p{margin:14px 0 0;max-height:135px;overflow:hidden}
 .sc-amenities{left:685px;top:1310px;width:305px;display:grid;gap:17px}
 .sc-amenity{display:flex;align-items:center;gap:18px;font-size:28px;font-weight:500;line-height:1.1;min-height:95px}
-.sc-amenity>span:last-child{overflow-wrap:anywhere}
+.sc-amenity-copy{display:block;min-width:0;overflow-wrap:anywhere}
+.sc-amenity-copy strong{display:block;font-size:33px;font-weight:700;line-height:1.02}
+.sc-amenity-copy>span{display:block;font-size:26px;font-weight:400;line-height:1.08;margin-top:3px}
 .sc-amenity-icon{width:64px;height:64px;border:2px solid #fff;border-radius:50%;display:grid;place-items:center;flex:none;position:relative}
 .sc-amenity:not(:last-child) .sc-amenity-icon::after{content:"";position:absolute;top:63px;left:29px;width:2px;height:39px;background:#fff}
 .sc-amenity-icon svg{width:42px;height:42px}
 .sc-contact{left:90px;top:1583px;display:flex;align-items:center;gap:23px;color:#087ffa;font-size:38px;font-weight:700;line-height:1.06;max-width:530px}
 .sc-contact svg{width:39px;height:39px;flex:none}
 .sc-contact strong{display:block;font-weight:700}
+.story.layout-edit [data-layout-key]{outline:3px dashed rgba(255,255,255,.85);outline-offset:3px;cursor:grab;touch-action:none;user-select:none}
+.story.layout-edit [data-layout-key][data-selected="true"]{outline:5px solid #ffe265;outline-offset:4px}
+.story.layout-edit [data-layout-key]:active{cursor:grabbing}
 
 /* animation */
 @keyframes s-rise{from{opacity:0;transform:translateY(38px)}to{opacity:1;transform:none}}
