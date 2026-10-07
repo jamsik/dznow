@@ -10,7 +10,7 @@ function loadImage(src) {
 }
 
 /** Continue the colors at each edge of the source into the empty canvas. */
-export async function extendFeatureBackground(source, formatId, position = 100) {
+export async function extendFeatureBackground(source, formatId, position = 75) {
   const image = await loadImage(source);
   const { width, height } = featureFormat(formatId);
   // Leave enough clear space above the subject for the headline in every ratio.
@@ -45,15 +45,26 @@ export async function extendFeatureBackground(source, formatId, position = 100) 
     for (let delta = -12; delta <= 12; delta += 4) total += get(x + delta, y, channel);
     return total / 7;
   };
+  const smoothWide = (x, y, channel) => {
+    let total = 0;
+    for (let delta = -60; delta <= 60; delta += 10) total += get(x + delta, y, channel);
+    return total / 13;
+  };
+  const imageBottom = top + imageHeight;
 
   for (let y = 0; y < back.height; y++) {
+    const canvasY = (y + .5) / back.height * height;
     for (let x = 0; x < back.width; x++) {
       const sourceX = (x + .5) / back.width * (sample.width - 1);
       const index = (y * back.width + x) * 4;
       for (let c = 0; c < 3; c++) {
         const edge = smooth(sourceX, 0, c);
         const slope = edge - smooth(sourceX, edgeDepth, c);
-        const value = edge + slope * Math.min(1, y / back.height) * .35;
+        const topValue = edge + slope * Math.min(1, y / back.height) * .35;
+        const bottomBlend = imageBottom < height - 1
+          ? Math.max(0, Math.min(1, (canvasY - imageBottom + 110) / 110)) : 0;
+        const bottomValue = bottomBlend ? smoothWide(sourceX, sample.height - 1, c) : topValue;
+        const value = topValue * (1 - bottomBlend) + bottomValue * bottomBlend;
         output.data[index + c] = Math.max(0, Math.min(255, Math.round(value)));
       }
       output.data[index + 3] = 255;
@@ -79,6 +90,14 @@ export async function extendFeatureBackground(source, formatId, position = 100) 
   fade.addColorStop(1, "rgba(0,0,0,1)");
   foregroundContext.fillStyle = fade;
   foregroundContext.fillRect(0, top, width, imageHeight);
+  if (imageBottom < height - 1) {
+    foregroundContext.globalCompositeOperation = "destination-out";
+    const bottomFade = foregroundContext.createLinearGradient(0, imageBottom - 110, 0, imageBottom);
+    bottomFade.addColorStop(0, "rgba(0,0,0,0)");
+    bottomFade.addColorStop(1, "rgba(0,0,0,1)");
+    foregroundContext.fillStyle = bottomFade;
+    foregroundContext.fillRect(0, imageBottom - 110, width, 110);
+  }
   const sideFade = left > 1 ? Math.min(180, imageWidth * .2) : 0;
   foregroundContext.globalCompositeOperation = "destination-out";
   for (const [x0, x1, reverse] of sideFade ? [[left, left + sideFade, false], [left + imageWidth - sideFade, left + imageWidth, true]] : []) {

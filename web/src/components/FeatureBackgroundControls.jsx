@@ -9,7 +9,7 @@ export default function FeatureBackgroundControls({ draft, onChange }) {
   const source = draft.featureSource || draft.bgImage;
   const format = draft.featureFormat || "9:16";
   const fit = draft.featureFit || "extend";
-  const position = draft.featurePosition ?? 100;
+  const position = draft.featurePosition ?? 75;
 
   useEffect(() => {
     if (!source) return;
@@ -58,7 +58,7 @@ export default function FeatureBackgroundControls({ draft, onChange }) {
       <div className="feature-option-label">Формат изображения</div>
       <div className="feature-format-list">{FEATURE_FORMATS.map(item =>
         <button type="button" key={item.id} className="feature-choice" aria-pressed={format === item.id}
-          onClick={() => onChange({ featureFormat: item.id, bgImage: null })}>
+          onClick={() => onChange({ featureFormat: item.id, featurePosition: item.id === "9:16" ? 75 : 100, bgImage: null })}>
           <strong>{item.id}</strong><small>{item.width} × {item.height}</small>
         </button>)}</div>
       <div className="feature-option-label">Как заполнить фон</div>

@@ -56,7 +56,7 @@ export const BASE_DRAFT = {
   featureSource: null,
   featureFormat: "9:16",
   featureFit: "extend",
-  featurePosition: 100,
+  featurePosition: 75,
   bgIntensity: 0.5,       // 0 — картинка почти открыта, 1 — закрыта цветом фона
   bgDirection: "br",      // куда уходит плотная часть: tl · tr · bl · br
 
