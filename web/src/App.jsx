@@ -85,7 +85,7 @@ export default function App() {
     setTemplateId(selected);
     setDraft(p.layout === "samolet_context" ? normalizeSamoletContext(p.data)
       : p.layout === "feature" ? { ...p.data, featureSource: p.data.featureSource || p.data.bgImage,
-        featureFormat: p.data.featureFormat || "9:16", featureFit: p.data.featureFit || "cover" }
+        featureFormat: p.data.featureFormat || "9:16", featureFit: p.data.featureVersion === 2 ? (p.data.featureFit || "extend") : "cover" }
       : { ...p.data });
     go("editor");
   };

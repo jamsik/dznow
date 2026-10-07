@@ -54,9 +54,12 @@ export const BASE_DRAFT = {
   // Фон: картинка ЖК под содержимым, проявляется градиентом
   bgImage: null,
   featureSource: null,
+  featureVersion: 2,
   featureFormat: "9:16",
   featureFit: "extend",
-  featurePosition: 75,
+  featureX: 50,
+  featureY: 60,
+  featureScale: 1,
   bgIntensity: 0.5,       // 0 — картинка почти открыта, 1 — закрыта цветом фона
   bgDirection: "br",      // куда уходит плотная часть: tl · tr · bl · br
 

@@ -40,13 +40,20 @@ export default function FeatureStory({ d }) {
   const shade = clamp(d.featureShade ?? 0.24, 0, 0.7);
   const x = clamp(d.bgX ?? 50, 0, 100);
   const y = clamp(d.bgY ?? 50, 0, 100);
+  const layered = d.featureVersion === 2 && d.featureFit === "extend" && d.featureSource;
+  const sourceX = clamp(d.featureX ?? 50, 0, 100);
+  const sourceY = clamp(d.featureY ?? 60, 0, 100);
+  const sourceScale = Math.max(.6, Math.min(2, Number(d.featureScale) || 1));
 
   return <>
     <div className="ft-background">
       {d.bgImage && <img src={d.bgImage} alt="" style={{ objectPosition: `${x}% ${y}%` }} />}
+      {layered && <img className="ft-source" src={d.featureSource} alt=""
+        style={{ width: `${sourceScale * 100}%`, left: `${50 + (sourceX - 50) * .7}%`,
+          top: `${sourceY * .75}%` }} />}
     </div>
     <div className="ft-shade" style={{ background: `linear-gradient(180deg, rgba(9,22,65,${shade}) 0%, rgba(9,22,65,${shade * .45}) 38%, rgba(9,22,65,.08) 100%)` }} />
-    {!d.bgImage && <div className="ft-placeholder">Загрузите изображение фона</div>}
+    {!d.bgImage && !d.featureSource && <div className="ft-placeholder">Загрузите изображение фона</div>}
     <div className="ft-title anim" style={{ "--d": ".1s", left: titleLeft, top: titleTop, width: titleWidth }}>
       {lines.map((line, index) => <span key={index} className="ft-title-line"
         style={{ fontSize: Math.min(titleMaxSize, headlineSize(line, index === 0 ? firstWidth : titleWidth)), maxWidth: index === 0 ? firstWidth : titleWidth }}>{line}</span>)}

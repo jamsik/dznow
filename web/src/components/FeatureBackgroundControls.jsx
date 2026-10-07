@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { FEATURE_FORMATS } from "../data/featureFormats";
-import { extendFeatureBackground } from "../lib/featureBackground";
+import { buildFeatureBackdrop } from "../lib/featureBackground";
 import { fitImage } from "../lib/planImage";
 
 export default function FeatureBackgroundControls({ draft, onChange }) {
@@ -9,22 +9,21 @@ export default function FeatureBackgroundControls({ draft, onChange }) {
   const source = draft.featureSource || draft.bgImage;
   const format = draft.featureFormat || "9:16";
   const fit = draft.featureFit || "extend";
-  const position = draft.featurePosition ?? 75;
 
   useEffect(() => {
     if (!source) return;
     if (fit === "cover") {
-      if (draft.bgImage !== source) onChange({ bgImage: source });
+      if (draft.featureVersion === 2 && draft.bgImage !== source) onChange({ bgImage: source });
       return;
     }
     let active = true;
     setBusy(true);
-    extendFeatureBackground(source, format, position)
+    buildFeatureBackdrop(source, format)
       .then(result => { if (active) onChange({ bgImage: result }); })
       .catch(error => { if (active) { console.error("[DZNOW] Фон:", error); onChange({ bgImage: source, featureFit: "cover" }); } })
       .finally(() => { if (active) setBusy(false); });
     return () => { active = false; };
-  }, [source, format, fit, position]);
+  }, [source, format, fit]);
 
   const pick = event => {
     const file = event.target.files?.[0];
@@ -32,8 +31,8 @@ export default function FeatureBackgroundControls({ draft, onChange }) {
     setBusy(true);
     const reader = new FileReader();
     reader.onload = async () => {
-      try { onChange({ featureSource: await fitImage(reader.result, 1920), bgImage: null }); }
-      catch { onChange({ featureSource: reader.result, bgImage: null }); }
+      try { onChange({ featureSource: await fitImage(reader.result, 1920), featureVersion: 2, bgImage: null }); }
+      catch { onChange({ featureSource: reader.result, featureVersion: 2, bgImage: null }); }
       finally { setBusy(false); }
     };
     reader.onerror = () => setBusy(false);
@@ -43,7 +42,7 @@ export default function FeatureBackgroundControls({ draft, onChange }) {
 
   return <section className="section feature-background-controls">
     <h3>Изображение фона</h3>
-    <p className="hint">Загрузите фото, выберите формат и способ заполнения. В режиме достройки фон продолжается по цветам краёв изображения, включая плавный градиент.</p>
+    <p className="hint">Загрузите фото и выберите формат. В режиме достройки можно сразу двигать и масштабировать исходный кадр — фон сохранит его цвета и градиент.</p>
     <div className="upl">
       <div className="thumb">{source ? <img src={source} alt="" /> : <span>Фото</span>}</div>
       <div><div className="t">{source ? "Изображение загружено" : "Добавьте изображение"}</div>
@@ -58,21 +57,29 @@ export default function FeatureBackgroundControls({ draft, onChange }) {
       <div className="feature-option-label">Формат изображения</div>
       <div className="feature-format-list">{FEATURE_FORMATS.map(item =>
         <button type="button" key={item.id} className="feature-choice" aria-pressed={format === item.id}
-          onClick={() => onChange({ featureFormat: item.id, featurePosition: item.id === "9:16" ? 75 : 100, bgImage: null })}>
+          onClick={() => onChange({ featureFormat: item.id, featureVersion: 2, bgImage: null })}>
           <strong>{item.id}</strong><small>{item.width} × {item.height}</small>
         </button>)}</div>
       <div className="feature-option-label">Как заполнить фон</div>
       <div className="feature-mode-list">
         <button type="button" className="feature-choice" aria-pressed={fit === "extend"}
-          onClick={() => onChange({ featureFit: "extend", bgImage: null })}>Достроить фон</button>
+          onClick={() => onChange({ featureFit: "extend", featureVersion: 2, bgImage: null })}>Достроить фон</button>
         <button type="button" className="feature-choice" aria-pressed={fit === "cover"}
           onClick={() => onChange({ featureFit: "cover", bgImage: source })}>Заполнить с обрезкой</button>
       </div>
       {source && <div className="fieldset">
-        {fit === "extend" ? <div className="row slider"><label htmlFor="feature-position">Положение исходного фото</label>
-          <input id="feature-position" type="range" min="0" max="100" step="1" value={position}
-            onChange={event => onChange({ featurePosition: Number(event.target.value), bgImage: null })} />
-          <span className="unit">{position}%</span></div> :
+        {fit === "extend" ? <>
+          {[["featureX", "Влево — вправо"], ["featureY", "Вверх — вниз"]].map(([key, label]) =>
+            <div className="row slider" key={key}><label htmlFor={`feature-${key}`}>{label}</label>
+              <input id={`feature-${key}`} type="range" min="0" max="100" step="1"
+                value={draft[key] ?? (key === "featureX" ? 50 : 60)}
+                onChange={event => onChange({ [key]: Number(event.target.value) })} />
+              <span className="unit">{draft[key] ?? (key === "featureX" ? 50 : 60)}%</span></div>)}
+          <div className="row slider"><label htmlFor="feature-scale">Масштаб фото</label>
+            <input id="feature-scale" type="range" min="0.6" max="2" step="0.01"
+              value={draft.featureScale ?? 1} onChange={event => onChange({ featureScale: Number(event.target.value) })} />
+            <span className="unit">{Math.round((draft.featureScale ?? 1) * 100)}%</span></div>
+        </> :
           [["bgX", "Сдвиг по горизонтали"], ["bgY", "Сдвиг по вертикали"]].map(([key, label]) =>
             <div className="row slider" key={key}><label htmlFor={`feature-${key}`}>{label}</label>
               <input id={`feature-${key}`} type="range" min="0" max="100" step="1"
